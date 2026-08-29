@@ -1,0 +1,183 @@
+Good morning everyone.
+
+Today, I will be explaining two important concepts in genetics: Gene Mapping and Gene Sequencing. These techniques have revolutionized our understanding of heredity, genetic disorders, evolution, and modern biotechnology.
+
+Let us begin with gene mapping.
+
+What is Gene Mapping?
+
+Gene mapping is the process of determining the location of genes on chromosomes and estimating the distance between them. In simple words, it acts like a roadmap that tells us where specific genes are situated within the genome.
+
+Imagine a chromosome as a long highway and genes as landmarks along that highway. Gene mapping helps us identify the position of each landmark and understand how they are related to one another.
+
+Gene mapping is important because it helps scientists identify genes associated with inherited diseases, understand genetic variation, and improve crop and animal breeding programs.
+
+Types of Gene Mapping
+
+There are two main types of gene mapping:
+
+1. Genetic Mapping (Linkage Mapping)
+
+Genetic mapping is based on the principle of genetic linkage. Genes that are located close together on the same chromosome tend to be inherited together.
+
+During meiosis, homologous chromosomes exchange genetic material through a process called crossing over. The frequency of recombination between two genes is used to estimate the distance between them.
+
+The unit used is called a centimorgan, abbreviated as cM.
+
+One centimorgan represents a 1% chance that a crossover event will occur between two genes during meiosis.
+
+For example, if two genes show a recombination frequency of 10%, they are said to be 10 centimorgans apart.
+
+2. Physical Mapping
+
+Physical mapping determines the actual physical distance between genes on a chromosome.
+
+Unlike genetic mapping, which relies on recombination frequencies, physical mapping measures the number of DNA base pairs separating genes.
+
+Techniques such as restriction mapping, fluorescence in situ hybridization (FISH), and genome sequencing are commonly used for physical mapping.
+
+Physical maps provide a more accurate representation of chromosome structure.
+
+Applications of Gene Mapping
+
+Gene mapping has several important applications:
+
+- Identification of genes responsible for genetic diseases such as cystic fibrosis and Huntington's disease.
+- Development of personalized medicine.
+- Understanding evolutionary relationships among organisms.
+- Improvement of agricultural crops through marker-assisted breeding.
+- Genome research and comparative genomics.
+
+Now that we understand gene mapping, let us move on to gene sequencing.
+
+What is Gene Sequencing?
+
+Gene sequencing is the process of determining the exact order of nucleotides in a DNA molecule.
+
+DNA is composed of four nitrogenous bases:
+
+- Adenine (A)
+- Thymine (T)
+- Guanine (G)
+- Cytosine (C)
+
+The sequence of these bases contains the genetic information needed for growth, development, and functioning of living organisms.
+
+Gene sequencing allows scientists to read this genetic code and identify variations or mutations.
+
+History of Gene Sequencing
+
+One of the most significant developments in molecular biology was the invention of the Sanger sequencing method by British scientist  in 1977.
+
+This technique became the foundation of DNA sequencing for many years and played a major role in major genome projects.
+
+Today, advanced technologies known as Next Generation Sequencing, or NGS, have made sequencing much faster and more affordable.
+
+Steps in Gene Sequencing
+
+The general process of gene sequencing involves several steps:
+
+Step 1: DNA Extraction
+
+First, DNA is isolated from cells obtained from blood, saliva, tissue, or other biological samples.
+
+Step 2: DNA Amplification
+
+Specific DNA regions are amplified using Polymerase Chain Reaction, commonly known as PCR.
+
+PCR generates millions of copies of the target DNA sequence.
+
+Step 3: Sequencing Reaction
+
+The DNA is subjected to sequencing reactions that determine the order of nucleotides.
+
+In Sanger sequencing, modified nucleotides called dideoxynucleotides terminate DNA synthesis at specific points, producing fragments of different lengths.
+
+Step 4: Data Analysis
+
+The generated sequence data is analyzed using bioinformatics tools.
+
+Scientists compare the obtained sequence with reference genomes to identify mutations or genetic variations.
+
+Types of Gene Sequencing
+
+1. Sanger Sequencing
+
+Sanger sequencing is highly accurate and suitable for sequencing small DNA fragments.
+
+Advantages:
+
+- High accuracy
+- Reliable results
+
+Limitations:
+
+- Time-consuming
+- Expensive for large genomes
+
+2. Next Generation Sequencing (NGS)
+
+NGS can sequence millions of DNA fragments simultaneously.
+
+Advantages:
+
+- High throughput
+- Faster processing
+- Lower cost per base
+
+Applications:
+
+- Whole genome sequencing
+- Cancer genomics
+- Pathogen detection
+- Genetic disease diagnosis
+
+Applications of Gene Sequencing
+
+Gene sequencing has transformed many fields of science and medicine.
+
+Medical Applications
+
+Sequencing helps identify disease-causing mutations and enables early diagnosis of genetic disorders.
+
+It is widely used in cancer research to understand tumor genetics and develop targeted therapies.
+
+Personalized Medicine
+
+Doctors can design treatments based on an individual's genetic makeup, increasing treatment effectiveness and reducing side effects.
+
+Agriculture
+
+Scientists use sequencing to develop crops with improved yield, disease resistance, and environmental adaptability.
+
+Evolutionary Studies
+
+DNA sequencing helps researchers trace evolutionary relationships and understand the origin of species.
+
+Forensic Science
+
+Sequencing and DNA analysis are used for criminal investigations, paternity testing, and identification of individuals.
+
+Relationship Between Gene Mapping and Gene Sequencing
+
+Although gene mapping and gene sequencing are different techniques, they are closely related.
+
+Gene mapping tells us where a gene is located on a chromosome.
+
+Gene sequencing tells us the exact nucleotide sequence of that gene.
+
+In other words, gene mapping provides the address, while gene sequencing reveals the complete content of the gene.
+
+Together, these methods help scientists understand genome organization, identify disease-causing genes, and develop new diagnostic and therapeutic approaches.
+
+Conclusion
+
+To conclude, gene mapping and gene sequencing are fundamental tools in modern genetics.
+
+Gene mapping helps determine the location and arrangement of genes on chromosomes, while gene sequencing reveals the precise order of nucleotides within DNA.
+
+These technologies have greatly advanced our understanding of genetic diseases, evolution, agriculture, biotechnology, and personalized medicine.
+
+As sequencing technologies continue to improve, they will play an even greater role in healthcare, research, and biological discoveries in the future.
+
+Thank you for your attention.

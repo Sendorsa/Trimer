@@ -1,0 +1,282 @@
+
+Good morning everyone.
+
+Today I am going to present a topic that has become extremely important in modern biological and computational research: **Data Repositories and Public Biological Databases**.
+
+In today's world, enormous amounts of data are generated every day through scientific experiments, medical research, biodiversity surveys, agricultural studies, and artificial intelligence applications. Managing and sharing this data efficiently is essential for scientific progress. This is where data repositories play a crucial role.
+
+In this presentation, I will discuss the meaning of data repositories, public and private datasets, the importance of public datasets, popular public dataset repositories, dataset licensing and usage rights, and finally some important biological repositories including NCBI, UniProt, GBIF, FAO, and Kaggle.
+
+---
+
+A data repository is a centralized digital location where datasets are stored, organized, maintained, and shared. Researchers, organizations, and institutions use repositories to preserve valuable data and make it available for future use.
+
+Think of a data repository as a digital library. Instead of storing books, it stores datasets. These datasets can contain information about genes, proteins, species distributions, climate conditions, agricultural production, or many other types of scientific information.
+
+Data repositories help researchers access reliable data quickly. They also ensure that valuable scientific information is not lost over time.
+
+---
+
+Now let us understand what a dataset is.
+
+A dataset is a collection of related data organized in a structured format. Datasets can be stored in spreadsheets, databases, or other digital formats.
+
+For example, a dataset may contain DNA sequences from thousands of organisms. Another dataset may contain records of bird species observed in different countries. A medical dataset might include patient information, disease symptoms, and treatment outcome    s.
+
+Datasets usually consist of observations, variables, and metadata. Observations are the individual records. Variables describe the characteristics being measured. Metadata provides information about how the data was collected and organized.
+
+Datasets form the foundation of modern scientific research and data analysis.
+
+---
+
+Now let us discuss public datasets.
+
+Public datasets are datasets that are freely available for anyone to access, download, and use. These datasets are usually shared by governments, universities, research institutions, or organizations that support open science.
+
+Public datasets are important because they allow researchers worldwide to work with the same information. This promotes transparency, collaboration, and innovation.
+
+Examples of public datasets include genome databases, biodiversity records, climate data, and public health statistics.
+
+Students also benefit greatly from public datasets because they can learn data analysis skills without needing to collect large amounts of data themselves.
+
+---
+
+In contrast, we have private datasets.
+
+Private datasets are datasets that have restricted access. These datasets are usually owned by organizations, companies, hospitals, or research groups.
+
+Access to private datasets may require permission, payment, or legal agreements.
+
+Examples include hospital patient records, confidential company data, pharmaceutical research data, and proprietary business information.
+
+Private datasets often contain sensitive information. Therefore, privacy protection and security measures are extremely important.
+
+Although private datasets can be highly valuable, they are generally more difficult to obtain than public datasets.
+
+---
+
+Let us compare public and private datasets.
+
+Public datasets are open and accessible to everyone. They are often free and encourage scientific collaboration.
+
+Private datasets, on the other hand, have restricted access. They may contain confidential information and require authorization before use.
+
+Public datasets are useful for education, research, and machine learning applications. Private datasets are commonly used within organizations for internal decision-making and specialized research.
+
+Both types of datasets are important, but their usage depends on the purpose and privacy requirements of the data.
+
+---
+
+Now let us examine why public datasets are so important.
+
+One major benefit is reproducibility. Scientific findings become more trustworthy when other researchers can access the same data and verify the results.
+
+Public datasets also accelerate scientific discovery. Researchers do not need to spend months collecting data that already exists.
+
+Another advantage is collaboration. Scientists from different countries can work together using shared datasets.
+
+Public datasets are also essential for machine learning and artificial intelligence. AI systems require large amounts of data for training and testing.
+
+Finally, public datasets support education by giving students access to real-world data.
+
+---
+
+Public datasets have applications in many fields.
+
+In healthcare, they help researchers study diseases and develop treatments.
+
+In biotechnology, public genomic datasets help scientists understand genes and proteins.
+
+In ecology and environmental science, datasets are used to monitor biodiversity and predict environmental changes.
+
+In agriculture, datasets help improve crop production and food security.
+
+In artificial intelligence, public datasets are used to train machine learning models for image recognition, language processing, and predictive analytics.
+
+---
+
+Now let us move to some popular public dataset repositories.
+
+The first repository is Kaggle.
+
+Kaggle is one of the world's most popular platforms for data science and machine learning. It provides thousands of public datasets covering numerous topics including biology, healthcare, agriculture, and environmental science.
+
+Researchers and students can download datasets, perform analyses, and participate in competitions.
+
+Kaggle also provides notebooks that allow users to analyze data directly within the platform.
+
+Biological datasets on Kaggle include cancer datasets, COVID-19 datasets, genome-related datasets, and species classification datasets.
+
+Because of its user-friendly interface, Kaggle is often the first platform students use when learning data science.
+
+---
+
+Another important platform is Hugging Face Datasets.
+
+Hugging Face is widely known for artificial intelligence and machine learning applications.
+
+The platform hosts thousands of datasets related to language processing, image analysis, audio recognition, and scientific research.
+
+Researchers use these datasets to train advanced AI models.
+
+The availability of high-quality datasets has contributed significantly to recent advances in artificial intelligence.
+
+---
+
+Next is the UCI Machine Learning Repository.
+
+The UCI Repository is one of the oldest and most respected dataset repositories in the world.
+
+It contains hundreds of datasets used for machine learning research and education.
+
+These datasets cover healthcare, biology, agriculture, engineering, and social sciences.
+
+Many students encounter UCI datasets while learning statistics, data science, and machine learning.
+
+The repository is particularly valuable because the datasets are well-documented and widely used in academic research.
+
+---
+
+Another useful tool is Google Dataset Search.
+
+Google Dataset Search functions similarly to Google's web search engine, but it is designed specifically for datasets.
+
+Instead of storing datasets directly, it helps users locate datasets hosted across the internet.
+
+Researchers can search for data related to biodiversity, genomics, climate science, healthcare, and many other topics.
+
+This makes finding relevant datasets much faster and more efficient.
+
+---
+
+Now let us discuss dataset licensing and usage rights.
+
+Not all datasets can be used in the same way. Dataset licensing determines what users are allowed to do with the data.
+
+Licenses define whether a dataset can be copied, modified, redistributed, or used commercially.
+
+Understanding licensing is essential because misuse of data may violate legal or ethical standards.
+
+Researchers must always read the license information before using a dataset.
+
+---
+
+Several common licenses are used for datasets.
+
+Creative Commons licenses are among the most popular.
+
+A CC BY license allows users to use the data as long as the original creator is credited.
+
+A CC BY-SA license requires users to share modified versions under the same license.
+
+A CC BY-NC license allows use only for non-commercial purposes.
+
+Some datasets are released into the public domain, meaning anyone can use them without restrictions.
+
+Others may have proprietary licenses that limit usage.
+
+---
+
+Ethical considerations are equally important.
+
+Researchers must respect privacy and confidentiality when using data.
+
+Human-related datasets should be collected with informed consent.
+
+Sensitive information must be protected against unauthorized access.
+
+Proper citation of data sources is necessary to acknowledge the efforts of data creators.
+
+Responsible data use helps maintain trust in scientific research.
+
+---
+
+Now we will focus on public biological repositories.
+
+The first and perhaps most important repository is NCBI.
+
+NCBI stands for the National Center for Biotechnology Information.
+
+NCBI is one of the world's largest biological information resources.
+
+It provides access to databases such as GenBank, PubMed, and BLAST.
+
+GenBank stores DNA and RNA sequence information.
+
+PubMed contains millions of scientific publications related to medicine and biology.
+
+BLAST allows researchers to compare genetic sequences and identify similarities.
+
+Biologists, biotechnologists, geneticists, and medical researchers use NCBI extensively.
+
+---
+
+The next repository is UniProt.
+
+UniProt stands for Universal Protein Resource.
+
+It is one of the most comprehensive protein databases available today.
+
+UniProt contains information about protein sequences, structures, functions, and biological roles.
+
+Researchers use UniProt to understand how proteins function in living organisms.
+
+Protein information is essential for biotechnology, medicine, drug development, and molecular biology research.
+
+The database is continuously updated to ensure accuracy and reliability.
+
+---
+
+Another major repository is GBIF.
+
+GBIF stands for Global Biodiversity Information Facility.
+
+GBIF provides open-access biodiversity data from around the world.
+
+The database contains millions of records documenting species occurrences in different locations.
+
+Researchers use GBIF to study species distribution, biodiversity patterns, conservation planning, and environmental change.
+
+For zoology and ecology students, GBIF is an extremely valuable resource because it provides real-world biodiversity information.
+
+---
+
+Next is FAO.
+
+FAO stands for the Food and Agriculture Organization of the United Nations.
+
+FAO maintains extensive databases related to agriculture, fisheries, forestry, food production, and food security.
+
+These datasets are used by governments, researchers, and policymakers.
+
+FAO data helps monitor global agricultural trends and supports efforts to address food shortages and environmental challenges.
+
+The organization plays a major role in promoting sustainable development worldwide.
+
+---
+
+Finally, let us revisit Kaggle from a biological perspective.
+
+Although Kaggle is not exclusively a biological repository, it hosts many biological and medical datasets.
+
+Students can find datasets related to genetics, cancer research, disease prediction, biodiversity, agriculture, and environmental science.
+
+Kaggle is particularly useful because it combines data access with analytical tools and educational resources.
+
+As a result, it serves as an excellent platform for learning data analysis and machine learning applications in biology.
+
+---
+
+To conclude, data repositories are essential components of modern science.
+
+They provide secure storage, efficient sharing, and long-term preservation of valuable datasets.
+
+Public datasets encourage transparency, collaboration, and innovation, while private datasets help protect sensitive information.
+
+Repositories such as Kaggle, Hugging Face, UCI Machine Learning Repository, and Google Dataset Search make data more accessible.
+
+Biological repositories including NCBI, UniProt, GBIF, and FAO provide critical resources that support research in biotechnology, zoology, ecology, medicine, and agriculture.
+
+As scientific data continues to grow, understanding how to access, evaluate, and responsibly use these repositories will become increasingly important for every researcher and student.
+
+Thank you for listening.
