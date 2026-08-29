@@ -1,7 +1,7 @@
 # Knowledge Transfer (KT) Document: Bumblebee Video Trimming Pipeline
 
 > [!NOTE]
-> **Bumblebee** is a two-stage automated video trimming pipeline. Stage 1 generates word-level speech-to-text transcripts with FFmpeg timestamps. Stage 2 uses a **3-Tier Hierarchical Alignment Engine** (Section $\rightarrow$ Block $\rightarrow$ Sentence) to align ground-truth scripts with noisy transcripts to produce high-accuracy timestamp metadata (92–95% accuracy).
+> **Bumblebee** is an automated two-stage video trimming pipeline. Stage 1 generates word-level speech-to-text transcripts with FFmpeg timestamps. Stage 2 & 3 align ground-truth scripts with noisy transcripts using rare-word anchoring, monotonic ordering, RapidFuzz 4-part scoring, and **Stage 3 Phonetic Rescue Matching** for ASR pronunciation errors.
 
 ---
 
@@ -25,20 +25,21 @@
            | (In-Memory Data Flow)        |
            v                              v
    Transcript Tuples           +-----------------------+
- [(word, start, end)] -------->| STAGE 2:              |
+ [(word, start, end)] -------->| STAGE 2 & 3:          |
                                | align_script.py       |
-                               | - 3-Tier Hierarchy    |
-                               | - Structural Merging  |
-                               | - Monotonic Ordering  |
-                               | - RapidFuzz 4-Metric  |
-                               | - Order Bonus (LCS)   |
-                               | - ASR Normalization   |
-                               | - Calibrated Confidence|
+                               | - align_script()      |
+                               | - Inverted Indexing   |
+                               | - Rare-Word Anchoring |
+                               | - Monotonic Bounds    |
+                               | - RapidFuzz Scoring   |
+                               | - Pause Penalty       |
+                               | - Retake Policy       |
+                               | - PHONETIC RESCUE     |
                                +-----------+-----------+
                                            |
                                            v
                                  Aligned Sentences JSON
-                         [{sentence, start, end, confidence, confidence_level}]
+                         [{sentence, start, end, confidence, match_type}]
 ```
 
 ---
@@ -46,131 +47,86 @@
 ## 2. Repository File Structure
 
 ```
-├── main.py                # Pipeline entry point connecting Stage 1 & Stage 2 in-memory
+├── main.py                # Pipeline entry point connecting Stage 1 & Stage 2/3 in-memory
 ├── transcript.py          # Stage 1: In-memory word-level transcription (generate_transcript)
-├── align_script.py        # Stage 2: Bumblebee 3-tier hierarchical script alignment engine
-├── test_align_script.py   # Unit & integration test suite for Stage 2
-├── requirements.txt       # Dependencies manifest (openai-whisper, torch, tqdm, rapidfuzz)
+├── align_script.py        # Stage 2 & 3: Bumblebee alignment engine with Phonetic Rescue
+├── test_align_script.py   # Unit & integration test suite for Stage 3 Phonetic Rescue
+├── requirements.txt       # Dependencies (openai-whisper, torch, tqdm, rapidfuzz, jellyfish)
 └── KT.md                  # Comprehensive Knowledge Transfer documentation
 ```
 
 ---
 
-## 3. Stage 2 Refactoring & Improvements Summary
+## 3. Stage 3: Phonetic Rescue Matching Fallback
 
-### 3.1 Structural Parsing & Merging (Improvements 1 & 2)
-* **`ScriptElementType` Enum**: Classifies script lines into `HEADING`, `SUBHEADING`, `BULLET`, `NUMBERED_ITEM`, `SENTENCE`, or `STRUCTURAL`.
-* **Structural Merging**: Short structural labels (< 3 words, e.g. `"1."` or `"Advantages:"`) are automatically merged with neighboring content (e.g., `"1. Genetic Mapping"` or `"Advantages: High Accuracy"`). Never aligned independently as 1-word elements.
+### 3.1 Goal & Overview
+Whisper STT frequently mishears specialized domain terms phonetically (e.g. *centimorgan* $\rightarrow$ *centi morgan*, *Sanger* $\rightarrow$ *Sangal*, *roadmap* $\rightarrow$ *load map*, * crossing over* $\rightarrow$ *cross over*, *nucleotides* $\rightarrow$ *nuclear types*).
 
-### 3.2 3-Tier Hierarchical Engine (Improvements 3 & 4)
-Constructs a 3-tier hierarchy: **Section $\rightarrow$ Block $\rightarrow$ Sentence**:
-1. **`ScriptSection`**: Bounded by section headings (e.g. `"What is Gene Mapping?"`).
-2. **`ScriptBlock`**: Groups neighboring sentences sharing paragraph context.
-3. **`ScriptSentence`**: Target alignment units.
+Phonetic Rescue acts as a **targeted fallback layer** when normal fuzzy/coverage scoring yields `normal_confidence < min_confidence` (default 70.0).
 
-### 3.3 Monotonic Alignment Constraint (Improvement 5)
-Prevents backward timestamp jumps. If sentence $N-1$ aligned ending at transcript index $X$, sentence $N$ candidate search starts at $\max(0, X - \text{monotonic\_overlap})$.
-* Configurable parameter: `monotonic_overlap: int = 20` transcript words.
+### 3.2 Top-$N$ Bounded Search & Complexity Guarantee
+To preserve linear scaling ($\mathcal{O}(N + M \cdot R \cdot K \cdot L)$) and eliminate false positives:
+1. Phonetic search is **never** run across the entire transcript.
+2. The engine filters the top $N$ fuzzy candidates already generated during normal scoring (default $N = 5$).
+3. Converts clean text to phonetic representations (Metaphone/Soundex) via `jellyfish`.
+4. Evaluates:
+   $$\text{phonetic\_score} = \text{rapidfuzz.fuzz.ratio}(\text{phonetic\_normalize}(S), \text{phonetic\_normalize}(C))$$
 
-### 3.4 Advanced 4-Part RapidFuzz Similarity Scoring (Improvement 6)
-$$\text{similarity} = 0.35 \cdot \text{fuzz.ratio} + 0.35 \cdot \text{fuzz.token\_set\_ratio} + 0.20 \cdot \text{fuzz.partial\_ratio} + 0.10 \cdot \text{coverage}$$
-
-### 3.5 Ordered Word Sequence Bonus (Improvement 7)
-Uses Longest Common Subsequence (LCS) ratio between script words and candidate words to reward exact word ordering:
-$$\text{order\_bonus} = 0.05 \times \text{lcs\_ratio}$$
-
-### 3.6 ASR Error Normalization Layer (Improvement 8)
-Applies pre-scoring text replacement dictionary `COMMON_ASR_NORMALIZATIONS`:
-* `"road map"` / `"load map"` $\rightarrow$ `"roadmap"`
-* `"sangal"` $\rightarrow$ `"sanger"`
-* `"nuclear types"` $\rightarrow$ `"nucleotides"`
-* `"gene mapping"` $\rightarrow$ `"genemapping"`
-
-### 3.7 Calibrated Confidence Levels (Improvement 9)
-Returns both numeric `confidence` score and categorical `confidence_level`:
-* $\ge 90.0 \rightarrow$ `"HIGH"`
-* $75.0 - 89.9 \rightarrow$ `"MEDIUM"`
-* $< 75.0 \rightarrow$ `"LOW"`
+### 3.3 Acceptance Criteria
+A rescued phonetic match is accepted if:
+$$\text{phonetic\_score} \ge \text{phonetic\_threshold} \quad (\text{default } 85.0) \quad \text{AND} \quad \text{phonetic\_score} > \text{normal\_confidence}$$
 
 ---
 
-## 4. Configurable Hyperparameters
+## 4. Configurable Hyperparameters Table
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `max_pause_seconds` | `float` | `1.5` | Maximum allowed inter-word gap in seconds before applying pause penalty |
 | `pause_weight` | `float` | `5.0` | Penalty multiplier for each second exceeding `max_pause_seconds` |
 | `tie_threshold` | `float` | `2.0` | Ranking score difference threshold to trigger retake preference policy |
-| `min_confidence` | `float` | `70.0` | Minimum score required to output a sentence match |
+| `min_confidence` | `float` | `70.0` | Minimum normal score required to accept a standard match |
 | `monotonic_overlap` | `int` | `20` | Maximum allowed backward transcript word search overlap for strict chronological monotonicity |
-| `normalizations` | `dict` | `COMMON_ASR_NORMALIZATIONS` | Extensible ASR error replacement mapping |
+| `phonetic_threshold` | `float` | `85.0` | Minimum score required for Phonetic Rescue fallback acceptance |
+| `phonetic_top_candidates` | `int` | `5` | Number of top normal candidates evaluated phonetically |
 
 ---
 
-## 5. Data Structures Specification
+## 5. Data Schema Specification
 
-```python
-class ScriptElementType(Enum):
-    HEADING = auto()
-    SUBHEADING = auto()
-    BULLET = auto()
-    NUMBERED_ITEM = auto()
-    SENTENCE = auto()
-    STRUCTURAL = auto()
-
-@dataclass
-class TranscriptWord:
-    raw_word: str
-    clean_word: str
-    start_sec: float
-    end_sec: float
-    start_fmt: str
-    end_fmt: str
-    index: int
-
-@dataclass
-class ScriptSentence:
-    sentence_id: int
-    raw_text: str
-    clean_text: str
-    words: List[str]
-    word_count: int
-    element_type: ScriptElementType = ScriptElementType.SENTENCE
-
-@dataclass
-class ScriptBlock:
-    block_id: int
-    raw_text: str
-    clean_text: str
-    sentences: List[ScriptSentence]
-
-@dataclass
-class ScriptSection:
-    section_id: int
-    heading_sentence: Optional[ScriptSentence]
-    heading_text: str
-    blocks: List[ScriptBlock]
-```
-
----
-
-## 6. Output Schema
-
-### 6.1 Matched Sentence Output Format
+### 5.1 Normal Match (`"match_type": "normal"`)
 ```json
 {
-  "sentence": "Advantages: High Accuracy",
-  "start": "00:00:04.460",
-  "end": "00:00:06.280",
-  "confidence": 100.0,
+  "sentence": "Hello everyone.",
+  "start": "00:00:28.740",
+  "end": "00:00:30.020",
+  "confidence": 98.2,
   "confidence_level": "HIGH",
-  "matched_text": "Advantages. High accuracy.",
-  "start_idx": 11,
-  "end_idx": 13
+  "matched": true,
+  "match_type": "normal",
+  "matched_text": "Hello everyone.",
+  "start_idx": 25,
+  "end_idx": 26
 }
 ```
 
-### 6.2 Unmatched Sentence Output Format (< min_confidence)
+### 5.2 Phonetic Rescued Match (`"match_type": "phonetic"`)
+```json
+{
+  "sentence": "The unit used is called a centimorgan",
+  "start": "00:01:12.400",
+  "end": "00:01:15.800",
+  "confidence": 91.5,
+  "confidence_level": "HIGH",
+  "matched": true,
+  "match_type": "phonetic",
+  "matched_text": "The unit used is called a centi morgan",
+  "start_idx": 110,
+  "end_idx": 118
+}
+```
+
+### 5.3 Unmatched Sentence Output Format (< min_confidence & failed rescue)
 ```json
 {
   "sentence": "This sentence was never spoken in the video.",
@@ -180,32 +136,33 @@ class ScriptSection:
 
 ---
 
-## 7. Complexity Analysis (Targeting 10,000+ Words)
+## 6. Complexity & Scalability Impact
 
 Let:
 * $N$ = Total transcript words (e.g. 10,000+)
 * $M$ = Number of script sentences (e.g. 500+)
 * $L$ = Average sentence word count ($\approx 10-15$)
-* $R$ = Frequency of rare anchor words ($R \ll N$)
+* $K_p$ = Number of top candidates evaluated phonetically ($K_p = 5$)
 
-| Stage / Function | Time Complexity | Space Complexity | Explanation |
-|---|---|---|---|
-| `normalize_transcript()` | $\mathcal{O}(N)$ | $\mathcal{O}(N)$ | Single pass over transcript words to build index maps |
-| `parse_script_hierarchical()` | $\mathcal{O}(S_{chars})$ | $\mathcal{O}(M \cdot L)$ | Structural parsing, merging & 3-tier section construction |
-| `generate_candidate_windows_bounded()` | $\mathcal{O}(M \cdot R \cdot K)$ | $\mathcal{O}(C_{cand})$ | Inverted index lookup for $R$ rare anchors bounded by monotonic window |
-| `score_candidate_advanced()` | $\mathcal{O}(W + L \cdot W)$ | $\mathcal{O}(W)$ | 4-Part RapidFuzz + LCS order bonus over window $W \approx L$ |
-| **Complete Alignment Pipeline** | $\mathbf{\mathcal{O}(N + M \cdot R \cdot K \cdot L)}$ | $\mathbf{\mathcal{O}(N + M \cdot L)}$ | **Linear & highly scalable**. Avoids $O(M \cdot N \cdot L)$ brute-force scanning. |
+Because phonetic normalization is applied **only to top $K_p=5$ candidates per low-confidence sentence**:
+$$\text{Additional Phonetic Overhead} = \mathcal{O}(M_{\text{low\_conf}} \cdot K_p \cdot L) \ll \mathcal{O}(N)$$
+
+The overall pipeline complexity remains **strictly linear** $\mathcal{O}(N + M \cdot R \cdot K \cdot L)$, with zero performance degradation on large transcripts.
 
 ---
 
-## 8. Usage & Verification
+## 7. Usage Guide & Commands
 
-### 8.1 Run Pipeline CLI
+### 7.1 Running Pipeline via Terminal CLI
 ```bash
+# Standard run
 python3 main.py input_video.mp4 script.txt
+
+# Custom phonetic threshold & debug logging
+python3 main.py input_video.mp4 script.txt --phonetic-threshold 80.0 --debug
 ```
 
-### 8.2 Run Test Suite
+### 7.2 Running Test Suite
 ```bash
 python3 test_align_script.py
 ```

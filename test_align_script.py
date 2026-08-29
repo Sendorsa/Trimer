@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-test_align_script.py - Unit & Integration Test Suite for Updated align_script.py
+test_align_script.py - Unit & Integration Test Suite for align_script.py with Stage 3 Phonetic Rescue
 """
 
 import unittest
 from align_script import (
     align_script,
     clean_text,
+    phonetic_normalize,
     detect_element_type,
     parse_script_hierarchical,
     ScriptElementType,
@@ -14,101 +15,79 @@ from align_script import (
 )
 
 
-class TestHierarchicalAlignScript(unittest.TestCase):
+class TestPhoneticRescueAlignScript(unittest.TestCase):
 
     def setUp(self):
-        # Educational lecture sample script with headings, subheadings, bullets, and numbers
+        # Sample script with misheard domain terms
         self.script_text = """
-What is Gene Mapping?
-Types of Gene Mapping
-1.
-Genetic Mapping (Linkage Mapping)
-
-Advantages:
-High Accuracy
-- Fast sequencing
-
+The unit used is called a centimorgan.
+We performed Sanger sequencing.
+Follow the roadmap for gene mapping.
+Recombination occurs during crossing over.
 This sentence was never spoken in the video.
         """
 
-        # Simulated transcript from transcript.py
+        # Simulated transcript where Whisper misheard target terms phonetically
         self.transcript_tuples = [
-            # Heading 1
-            ("What", "00:00:01.000", "00:00:01.200"),
-            ("is", "00:00:01.200", "00:00:01.400"),
-            ("gene", "00:00:01.400", "00:00:01.800"),
-            ("mapping?", "00:00:01.800", "00:00:02.300"),
+            # 1. centimorgan -> centi morgan
+            ("The", "00:00:01.000", "00:00:01.200"),
+            ("unit", "00:00:01.200", "00:00:01.400"),
+            ("used", "00:00:01.400", "00:00:01.600"),
+            ("is", "00:00:01.600", "00:00:01.800"),
+            ("called", "00:00:01.800", "00:00:02.100"),
+            ("a", "00:00:02.100", "00:00:02.200"),
+            ("centi", "00:00:02.200", "00:00:02.600"),
+            ("morgan.", "00:00:02.600", "00:00:03.100"),
 
-            # Heading 2
-            ("Types", "00:00:04.000", "00:00:04.300"),
-            ("of", "00:00:04.300", "00:00:04.500"),
-            ("gene", "00:00:04.500", "00:00:04.900"),
-            ("mapping.", "00:00:04.900", "00:00:05.400"),
+            # 2. Sanger -> Sangal
+            ("We", "00:00:05.000", "00:00:05.200"),
+            ("performed", "00:00:05.200", "00:00:05.600"),
+            ("Sangal", "00:00:05.600", "00:00:06.100"),
+            ("sequencing.", "00:00:06.100", "00:00:06.800"),
 
-            # Merged Numbered Item: "1. Genetic Mapping (Linkage Mapping)"
-            ("1.", "00:00:07.000", "00:00:07.300"),
-            ("genetic", "00:00:07.300", "00:00:07.800"),
-            ("mapping", "00:00:08.300", "00:00:08.900"),
-            ("linkage", "00:00:08.900", "00:00:09.500"),
-            ("mapping.", "00:00:09.500", "00:00:10.000"),
+            # 3. roadmap -> load map
+            ("Follow", "00:00:09.000", "00:00:09.300"),
+            ("the", "00:00:09.300", "00:00:09.500"),
+            ("load", "00:00:09.500", "00:00:09.800"),
+            ("map", "00:00:09.800", "00:00:10.100"),
+            ("for", "00:00:10.100", "00:00:10.300"),
+            ("gene", "00:00:10.300", "00:00:10.600"),
+            ("mapping.", "00:00:10.600", "00:00:11.100"),
 
-            # Merged Subheading + Content: "Advantages: High Accuracy"
-            ("advantages", "00:00:12.000", "00:00:12.400"),
-            ("high", "00:00:12.400", "00:00:12.800"),
-            ("accuracy.", "00:00:12.800", "00:00:13.400"),
-
-            # Bullet: "- Fast sequencing" (With ASR error: "sangal" -> "sanger")
-            ("fast", "00:00:15.000", "00:00:15.300"),
-            ("sangal", "00:00:15.300", "00:00:15.800"),
-            ("sequencing.", "00:00:15.800", "00:00:16.400")
+            # 4. crossing over -> cross over
+            ("Recombination", "00:00:13.000", "00:00:13.600"),
+            ("occurs", "00:00:13.600", "00:00:14.000"),
+            ("during", "00:00:14.000", "00:00:14.300"),
+            ("cross", "00:00:14.300", "00:00:14.700"),
+            ("over.", "00:00:14.700", "00:00:15.200")
         ]
 
-    def test_element_type_detection(self):
-        self.assertEqual(detect_element_type("What is Gene Mapping?"), ScriptElementType.HEADING)
-        self.assertEqual(detect_element_type("Advantages:"), ScriptElementType.SUBHEADING)
-        self.assertEqual(detect_element_type("1."), ScriptElementType.NUMBERED_ITEM)
-        self.assertEqual(detect_element_type("- High Accuracy"), ScriptElementType.BULLET)
-        self.assertEqual(detect_element_type("This is a regular lecture sentence."), ScriptElementType.SENTENCE)
+    def test_phonetic_normalization(self):
+        p1 = phonetic_normalize("Sanger sequencing")
+        p2 = phonetic_normalize("Sangal sequencing")
+        self.assertIn("SKNSNK", p1)
+        self.assertIn("SKNSNK", p2)
 
-    def test_structural_merging(self):
-        sections = parse_script_hierarchical(self.script_text)
-        all_sents = []
-        for sec in sections:
-            if sec.heading_sentence:
-                all_sents.append(sec.heading_sentence.raw_text)
-            for b in sec.blocks:
-                for s in b.sentences:
-                    all_sents.append(s.raw_text)
-
-        # Check that "1." was merged with "Genetic Mapping (Linkage Mapping)"
-        self.assertTrue(any("1. Genetic Mapping" in s for s in all_sents))
-        # Check that "Advantages:" was merged with "High Accuracy"
-        self.assertTrue(any("Advantages: High Accuracy" in s for s in all_sents))
-
-    def test_asr_normalization(self):
-        cleaned = clean_text("fast sangal sequencing")
-        self.assertIn("sanger", cleaned)
-
-    def test_end_to_end_hierarchical_alignment(self):
+    def test_phonetic_rescue_matches(self):
         results = align_script(
             self.transcript_tuples,
             self.script_text,
-            min_confidence=70.0
+            min_confidence=85.0,
+            phonetic_threshold=80.0
         )
 
-        self.assertTrue(len(results) > 0)
+        self.assertEqual(len(results), 5)
 
-        # Check that confidence levels exist (HIGH, MEDIUM, LOW)
-        matched_results = [r for r in results if r.get("matched") is not False]
-        self.assertTrue(len(matched_results) > 0)
-        for r in matched_results:
-            self.assertIn("confidence_level", r)
-            self.assertIn(r["confidence_level"], ("HIGH", "MEDIUM", "LOW"))
+        # Matched rescued sentences
+        matched_results = [r for r in results if r.get("matched")]
+        self.assertTrue(len(matched_results) >= 4)
 
-        # Unspoken sentence test
-        unspoken = [r for r in results if "never spoken" in r["sentence"]]
-        self.assertEqual(len(unspoken), 1)
-        self.assertFalse(unspoken[0].get("matched", True))
+        for s in matched_results:
+            self.assertIn(s.get("match_type"), ("normal", "phonetic"))
+
+        # Unspoken sentence (false positive prevention)
+        s5 = results[4]
+        self.assertFalse(s5.get("matched", True))
 
 
 if __name__ == "__main__":

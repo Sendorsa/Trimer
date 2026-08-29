@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-align_script.py - Bumblebee Stage 2 Hierarchical Script Alignment Engine
+align_script.py - Bumblebee Stage 3 Alignment Engine with Phonetic Rescue Matching
 
 Aligns noisy word-level transcripts produced by transcript.py with a ground-truth script file.
 
 Features:
-  1. Structural Parsing & Merging (Heading, Subheading, Bullet, Numbered Item classification)
-  2. Hierarchical Alignment Engine (Section -> Block -> Sentence Alignment)
+  1. Phonetic Rescue Matching Fallback (Metaphone/Soundex + RapidFuzz top-N candidate evaluation)
+  2. Independent Sentence Alignment (ungated by section/block bounds)
   3. Monotonic Chronological Alignment (prevents backward timestamp jumps)
   4. 4-Part RapidFuzz Similarity Scoring (ratio, token_set_ratio, partial_ratio, coverage)
   5. Ordered Word Sequence Matching (LCS Order Bonus)
   6. ASR Error Normalization Layer (extensible dictionary mapping)
   7. Calibrated Confidence Levels (HIGH, MEDIUM, LOW)
   8. Rare-Word Anchored Inverted Index Search (scalable to 10,000+ words)
+  9. Structural Parsing & Merging (Heading, Subheading, Bullet, Numbered Item classification for metadata)
 """
 
 import os
@@ -20,9 +21,10 @@ import re
 import sys
 import json
 import string
+import argparse
 import warnings
 from enum import Enum, auto
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional
 from collections import Counter
 
@@ -34,6 +36,11 @@ try:
 except ImportError:
     print("Error: 'rapidfuzz' package is required. Install it using:\n  pip install rapidfuzz", file=sys.stderr)
     sys.exit(1)
+
+try:
+    import jellyfish
+except ImportError:
+    jellyfish = None
 
 try:
     from tqdm import tqdm
@@ -130,6 +137,28 @@ def clean_text(text: str, normalizations: Optional[Dict[str, str]] = None) -> st
     return text_clean
 
 
+def phonetic_normalize(text: str) -> str:
+    """
+    Converts sentence text into space-separated phonetic representation (Metaphone/Soundex).
+    Example:
+      'Sanger sequencing' -> 'SNJR SKNSNK'
+      'Sangal sequencing' -> 'SNKL SKNSNK'
+    """
+    clean_words = text.lower().split()
+    codes = []
+    for w in clean_words:
+        code = None
+        if jellyfish:
+            try:
+                code = jellyfish.metaphone(w)
+                if not code:
+                    code = jellyfish.soundex(w)
+            except Exception:
+                code = None
+        codes.append(code if code else w)
+    return " ".join(codes)
+
+
 def detect_element_type(line: str) -> ScriptElementType:
     """
     Classifies a script line into a ScriptElementType enum.
@@ -138,21 +167,17 @@ def detect_element_type(line: str) -> ScriptElementType:
     if not trimmed:
         return ScriptElementType.STRUCTURAL
 
-    # Heading / Subheading detection
     if re.match(r'^(what is|types of|applications of|steps in|introduction|conclusion|overview)', trimmed, re.I):
         return ScriptElementType.HEADING
     if re.match(r'^(advantages|disadvantages|summary|overview|notes):?$', trimmed, re.I):
         return ScriptElementType.SUBHEADING
 
-    # Numbered item (e.g., "1.", "2)", "(3)")
     if re.match(r'^(\d+[\.\)]|\(\d+\))\s*$', trimmed) or re.match(r'^(\d+[\.\)]|\(\d+\))\s+\w+', trimmed):
         return ScriptElementType.NUMBERED_ITEM
 
-    # Bullet point (e.g., "- High Accuracy", "* Item")
     if re.match(r'^[\-\*\•]\s+', trimmed):
         return ScriptElementType.BULLET
 
-    # Short standalone label
     words = trimmed.split()
     if len(words) < 3 and trimmed.endswith(':'):
         return ScriptElementType.SUBHEADING
@@ -226,7 +251,7 @@ def parse_script_hierarchical(
     """
     STAGES 1 & 2 (Structural Parsing & Merging):
     Splits script into sentences, detects element types, merges short structural
-    elements (< 3 words), and builds a 3-tier hierarchy: Section -> Block -> Sentence.
+    elements (< 3 words), and constructs ScriptBlock and ScriptSection objects for metadata.
     """
     raw_lines = re.split(r'\n+', script_content)
     parsed_sentences: List[ScriptSentence] = []
@@ -250,7 +275,6 @@ def parse_script_hierarchical(
         full_raw = (pending_prefix + " " + trimmed).strip() if pending_prefix else trimmed
         pending_prefix = ""
 
-        # Sub-split long lines into sentences safely
         sub_sentences = split_sentences_safely(full_raw)
         for s in sub_sentences:
             s_trimmed = s.strip()
@@ -285,7 +309,6 @@ def parse_script_hierarchical(
                 element_type=ScriptElementType.STRUCTURAL
             ))
 
-    # Group sentences into Blocks and Sections
     sections: List[ScriptSection] = []
     curr_section_heading: Optional[ScriptSentence] = None
     curr_section_blocks: List[ScriptBlock] = []
@@ -338,9 +361,7 @@ def parse_script_hierarchical(
 
 
 def compute_lcs_order_ratio(script_words: List[str], cand_words: List[str]) -> float:
-    """
-    Computes Longest Common Subsequence (LCS) ratio to reward ordered word matches.
-    """
+    """Computes Longest Common Subsequence (LCS) ratio to reward ordered word matches."""
     if not script_words or not cand_words:
         return 0.0
     m, n = len(script_words), len(cand_words)
@@ -376,18 +397,15 @@ def score_candidate_advanced(
     cand_clean_words = [w.clean_word for w in candidate_words if w.clean_word]
     cand_clean_text = " ".join(cand_clean_words)
 
-    # 1. Multi-metric RapidFuzz Scores
     ratio_score = float(rapidfuzz.fuzz.ratio(sentence.clean_text, cand_clean_text))
     token_set_score = float(rapidfuzz.fuzz.token_set_ratio(sentence.clean_text, cand_clean_text))
     partial_score = float(rapidfuzz.fuzz.partial_ratio(sentence.clean_text, cand_clean_text))
 
-    # 2. Multiset Word Coverage
     script_counts = Counter(sentence.words)
     cand_counts = Counter(cand_clean_words)
     matched_words_count = sum(min(count, cand_counts.get(word, 0)) for word, count in script_counts.items())
     coverage_score = (matched_words_count / sentence.word_count) * 100.0 if sentence.word_count > 0 else 0.0
 
-    # 3. Composite Similarity (0-100)
     similarity = (
         0.35 * ratio_score +
         0.35 * token_set_score +
@@ -395,11 +413,9 @@ def score_candidate_advanced(
         0.10 * coverage_score
     )
 
-    # 4. Ordered Match Sequence Bonus (LCS)
     order_ratio = compute_lcs_order_ratio(sentence.words, cand_clean_words)
     order_bonus = 0.05 * order_ratio
 
-    # 5. Continuous Pause Penalty
     pause_penalty = 0.0
     for i in range(len(candidate_words) - 1):
         curr_word = candidate_words[i]
@@ -408,7 +424,6 @@ def score_candidate_advanced(
         if gap > max_pause_seconds:
             pause_penalty += (gap - max_pause_seconds) * pause_weight
 
-    # Ranking Score
     ranking_score = (0.6 * similarity) + (0.4 * coverage_score) + order_bonus - pause_penalty
 
     return similarity, coverage_score, pause_penalty, ranking_score
@@ -437,7 +452,6 @@ def generate_candidate_windows_bounded(
     if min_search_idx > max_search_idx:
         min_search_idx = max(0, max_search_idx - 20)
 
-    # Valid words in sentence that appear in transcript
     valid_words = [w for w in sentence.words if w in word_frequency]
 
     if not valid_words:
@@ -448,7 +462,6 @@ def generate_candidate_windows_bounded(
             res.append((i, e_idx))
         return res
 
-    # Select rarest words
     sorted_words = sorted(valid_words, key=lambda w: word_frequency[w])
     rarest_words = sorted_words[:max_anchors]
 
@@ -459,7 +472,6 @@ def generate_candidate_windows_bounded(
                 anchor_indices.add(idx)
 
     if not anchor_indices:
-        # Fallback to bounded range scan
         window_size = sentence.word_count
         return [(i, min(max_search_idx, i + window_size - 1)) for i in range(min_search_idx, max_search_idx + 1)]
 
@@ -481,9 +493,7 @@ def generate_candidate_windows_bounded(
 
 
 def calibrate_confidence_level(confidence: float) -> str:
-    """
-    STAGE 5: Confidence Calibration Level.
-    """
+    """STAGE 5: Confidence Calibration Level."""
     if confidence >= 90.0:
         return "HIGH"
     elif confidence >= 75.0:
@@ -500,10 +510,13 @@ def align_script(
     tie_threshold: float = 2.0,
     min_confidence: float = 70.0,
     monotonic_overlap: int = 20,
-    normalizations: Optional[Dict[str, str]] = None
+    phonetic_threshold: float = 85.0,
+    phonetic_top_candidates: int = 5,
+    normalizations: Optional[Dict[str, str]] = None,
+    debug: bool = False
 ) -> List[dict]:
     """
-    Main Hierarchical Alignment Function.
+    Main Alignment Function with Phonetic Rescue Fallback.
 
     Args:
         transcript_tuples: List of (word, start_fmt, end_fmt) tuples in memory.
@@ -511,9 +524,12 @@ def align_script(
         max_pause_seconds: Max gap allowed before pause penalty.
         pause_weight: Penalty multiplier for long pauses.
         tie_threshold: Threshold to prefer later occurrence for retakes.
-        min_confidence: Minimum score required for a match.
+        min_confidence: Minimum score required for normal match.
         monotonic_overlap: Allowed backwards search overlap window (default 20).
+        phonetic_threshold: Minimum phonetic score for rescue (default 85.0).
+        phonetic_top_candidates: Number of top candidates to evaluate phonetically (default 5).
         normalizations: Custom ASR error replacement dictionary.
+        debug: Enable debug logging output to stderr.
 
     Returns:
         List of dict alignment results for each sentence in the script.
@@ -530,7 +546,7 @@ def align_script(
     # Stage 2: Parse Script into Sections -> Blocks -> Sentences
     sections = parse_script_hierarchical(script_text, normalizations)
 
-    # Collect all sentences across sections for monotonic alignment tracking
+    # Independent sentence-level alignment loop across transcript
     all_sentences: List[ScriptSentence] = []
     for sec in sections:
         if sec.heading_sentence:
@@ -545,95 +561,157 @@ def align_script(
     iterator = tqdm(all_sentences, desc="Aligning script sentences", unit="sentence", file=sys.stderr) if tqdm else all_sentences
 
     for sentence in iterator:
-        # Monotonic Alignment Constraint: Start search at (last_matched_end_idx - monotonic_overlap)
         min_search_idx = max(0, last_matched_end_idx - monotonic_overlap)
 
-        # Stage 3: Candidate Window Generation
         candidate_windows = generate_candidate_windows_bounded(
             sentence, transcript_words, word_frequency, inverted_index,
             min_search_idx=min_search_idx, max_search_idx=total_transcript_words - 1
         )
 
-        best_candidate = None
-        best_ranking_score = float('-inf')
+        evaluated_candidates = []
 
-        # Stage 4: Multi-metric Scoring
         for s_idx, e_idx in candidate_windows:
             cand_slice = transcript_words[s_idx : e_idx + 1]
             sim, cov, penalty, rank_score = score_candidate_advanced(
                 sentence, cand_slice, max_pause_seconds, pause_weight
             )
+            evaluated_candidates.append((s_idx, e_idx, sim, cov, penalty, rank_score, cand_slice))
 
-            if best_candidate is None:
-                best_ranking_score = rank_score
-                best_candidate = (s_idx, e_idx, sim, cov, penalty, rank_score)
-            else:
-                score_diff = rank_score - best_ranking_score
-                if score_diff > tie_threshold:
-                    best_ranking_score = rank_score
-                    best_candidate = (s_idx, e_idx, sim, cov, penalty, rank_score)
-                elif abs(score_diff) <= tie_threshold:
-                    # Retake Policy: Prefer later occurrence (higher start_idx)
-                    if s_idx > best_candidate[0]:
-                        best_ranking_score = rank_score
-                        best_candidate = (s_idx, e_idx, sim, cov, penalty, rank_score)
-
-        if best_candidate is None:
+        if not evaluated_candidates:
             alignment_results.append({
                 "sentence": sentence.raw_text,
                 "matched": False
             })
             continue
 
-        s_idx, e_idx, sim, cov, penalty, rank_score = best_candidate
-        confidence = max(0.0, min(100.0, rank_score))
+        # Sort candidates by ranking_score descending
+        evaluated_candidates.sort(key=lambda c: c[5], reverse=True)
 
-        if confidence < min_confidence:
-            alignment_results.append({
-                "sentence": sentence.raw_text,
-                "matched": False
-            })
-        else:
-            cand_slice = transcript_words[s_idx : e_idx + 1]
+        # Select best candidate according to retake policy
+        best_candidate = evaluated_candidates[0]
+        best_ranking_score = best_candidate[5]
+
+        for cand in evaluated_candidates[1:10]:
+            s_idx, rank_score = cand[0], cand[5]
+            score_diff = rank_score - best_ranking_score
+            if score_diff > tie_threshold:
+                best_ranking_score = rank_score
+                best_candidate = cand
+            elif abs(score_diff) <= tie_threshold:
+                if s_idx > best_candidate[0]:
+                    best_ranking_score = rank_score
+                    best_candidate = cand
+
+        s_idx, e_idx, sim, cov, penalty, rank_score, cand_slice = best_candidate
+        normal_confidence = max(0.0, min(100.0, rank_score))
+
+        # Check normal match condition
+        if normal_confidence >= min_confidence:
             matched_text = " ".join([w.raw_word for w in cand_slice])
             start_fmt = cand_slice[0].start_fmt
             end_fmt = cand_slice[-1].end_fmt
 
-            # Update last matched end index for monotonic tracking
             last_matched_end_idx = max(last_matched_end_idx, e_idx)
 
             alignment_results.append({
                 "sentence": sentence.raw_text,
                 "start": start_fmt,
                 "end": end_fmt,
-                "confidence": round(confidence, 2),
-                "confidence_level": calibrate_confidence_level(confidence),
+                "confidence": round(normal_confidence, 2),
+                "confidence_level": calibrate_confidence_level(normal_confidence),
+                "matched": True,
+                "match_type": "normal",
                 "matched_text": matched_text,
                 "start_idx": s_idx,
                 "end_idx": e_idx
+            })
+            continue
+
+        # STAGE 3: PHONETIC RESCUE FALLBACK (Top-N Candidates Only)
+        top_n_candidates = evaluated_candidates[:phonetic_top_candidates]
+        phonetic_script = phonetic_normalize(sentence.clean_text)
+
+        best_phonetic_candidate = None
+        best_phonetic_score = float('-inf')
+
+        for cand in top_n_candidates:
+            c_slice = cand[6]
+            cand_clean_text = " ".join([w.clean_word for w in c_slice if w.clean_word])
+            phonetic_cand = phonetic_normalize(cand_clean_text)
+
+            p_score = float(rapidfuzz.fuzz.ratio(phonetic_script, phonetic_cand))
+
+            if p_score > best_phonetic_score:
+                best_phonetic_score = p_score
+                best_phonetic_candidate = (cand, p_score)
+
+        if best_phonetic_candidate and best_phonetic_score >= phonetic_threshold and best_phonetic_score > normal_confidence:
+            res_cand, p_score = best_phonetic_candidate
+            ps_idx, pe_idx, _, _, _, _, res_slice = res_cand
+            matched_text = " ".join([w.raw_word for w in res_slice])
+            start_fmt = res_slice[0].start_fmt
+            end_fmt = res_slice[-1].end_fmt
+
+            last_matched_end_idx = max(last_matched_end_idx, pe_idx)
+
+            if debug:
+                print(
+                    f"\n[PHONETIC]\n"
+                    f"Sentence: \"{sentence.raw_text}\"\n"
+                    f"Normal confidence: {normal_confidence:.1f}\n"
+                    f"Phonetic confidence: {p_score:.1f}\n"
+                    f"Result: ACCEPTED",
+                    file=sys.stderr
+                )
+
+            alignment_results.append({
+                "sentence": sentence.raw_text,
+                "start": start_fmt,
+                "end": end_fmt,
+                "confidence": round(p_score, 2),
+                "confidence_level": calibrate_confidence_level(p_score),
+                "matched": True,
+                "match_type": "phonetic",
+                "matched_text": matched_text,
+                "start_idx": ps_idx,
+                "end_idx": pe_idx
+            })
+        else:
+            alignment_results.append({
+                "sentence": sentence.raw_text,
+                "matched": False
             })
 
     return alignment_results
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python3 align_script.py <script_file_path> <video_or_transcript_file>", file=sys.stderr)
-        print("Example: python3 align_script.py script.txt lecture.mp4", file=sys.stderr)
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Bumblebee Stage 3 Alignment Engine")
+    parser.add_argument("script_file", help="Path to ground-truth script text file")
+    parser.add_argument("media_or_json_file", help="Path to video/audio file or transcript JSON file")
+    parser.add_argument("--phonetic-threshold", type=float, default=85.0, help="Phonetic rescue minimum score threshold (default: 85.0)")
+    parser.add_argument("--phonetic-top-candidates", type=int, default=5, help="Number of top candidates evaluated for phonetic rescue (default: 5)")
+    parser.add_argument("--min-confidence", type=float, default=70.0, help="Minimum normal confidence threshold (default: 70.0)")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging output")
 
-    script_file = sys.argv[1]
-    media_or_json_file = sys.argv[2]
+    args = parser.parse_args()
 
     try:
-        if media_or_json_file.endswith('.json'):
-            with open(media_or_json_file, 'r', encoding='utf-8') as f:
+        if args.media_or_json_file.endswith('.json'):
+            with open(args.media_or_json_file, 'r', encoding='utf-8') as f:
                 transcript_tuples = json.load(f)
         else:
             from transcript import generate_transcript
-            transcript_tuples = generate_transcript(media_or_json_file)
+            transcript_tuples = generate_transcript(args.media_or_json_file)
 
-        results = align_script(transcript_tuples, script_file)
+        results = align_script(
+            transcript_tuples,
+            args.script_file,
+            min_confidence=args.min_confidence,
+            phonetic_threshold=args.phonetic_threshold,
+            phonetic_top_candidates=args.phonetic_top_candidates,
+            debug=args.debug
+        )
         print(json.dumps(results, indent=2))
     except Exception as e:
         print(f"Error during alignment: {e}", file=sys.stderr)
