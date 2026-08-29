@@ -1,93 +1,121 @@
 #!/usr/bin/env python3
 """
-test_align_script.py - Unit & Integration Test Suite for align_script.py with Stage 3 Phonetic Rescue
+test_align_script.py - Unit & Integration Test Suite for align_script.py Diagnostics & Adaptive Search
 """
 
 import unittest
 from align_script import (
     align_script,
     clean_text,
-    phonetic_normalize,
     detect_element_type,
     parse_script_hierarchical,
     ScriptElementType,
-    COMMON_ASR_NORMALIZATIONS
+    RejectionReason,
+    compute_adaptive_search_window,
+    BASE_SEARCH_WINDOW,
+    MAX_SEARCH_WINDOW
 )
 
 
-class TestPhoneticRescueAlignScript(unittest.TestCase):
+class TestDiagnosticsAlignScript(unittest.TestCase):
 
     def setUp(self):
-        # Sample script with misheard domain terms
+        # Educational presentation script
         self.script_text = """
-The unit used is called a centimorgan.
-We performed Sanger sequencing.
-Follow the roadmap for gene mapping.
-Recombination occurs during crossing over.
+What is Gene Mapping?
+Types of Gene Mapping
+1.
+Genetic Mapping (Linkage Mapping)
+
+Advantages:
+High Accuracy
+
+Limitations:
+Time Consuming
+
+Applications:
+Whole Genome Sequencing
+
 This sentence was never spoken in the video.
         """
 
-        # Simulated transcript where Whisper misheard target terms phonetically
+        # Simulated transcript
         self.transcript_tuples = [
-            # 1. centimorgan -> centi morgan
-            ("The", "00:00:01.000", "00:00:01.200"),
-            ("unit", "00:00:01.200", "00:00:01.400"),
-            ("used", "00:00:01.400", "00:00:01.600"),
-            ("is", "00:00:01.600", "00:00:01.800"),
-            ("called", "00:00:01.800", "00:00:02.100"),
-            ("a", "00:00:02.100", "00:00:02.200"),
-            ("centi", "00:00:02.200", "00:00:02.600"),
-            ("morgan.", "00:00:02.600", "00:00:03.100"),
+            # Heading 1
+            ("What", "00:00:01.000", "00:00:01.200"),
+            ("is", "00:00:01.200", "00:00:01.400"),
+            ("gene", "00:00:01.400", "00:00:01.800"),
+            ("mapping?", "00:00:01.800", "00:00:02.300"),
 
-            # 2. Sanger -> Sangal
-            ("We", "00:00:05.000", "00:00:05.200"),
-            ("performed", "00:00:05.200", "00:00:05.600"),
-            ("Sangal", "00:00:05.600", "00:00:06.100"),
-            ("sequencing.", "00:00:06.100", "00:00:06.800"),
+            # Heading 2
+            ("Types", "00:00:04.000", "00:00:04.300"),
+            ("of", "00:00:04.300", "00:00:04.500"),
+            ("gene", "00:00:04.500", "00:00:04.900"),
+            ("mapping.", "00:00:04.900", "00:00:05.400"),
 
-            # 3. roadmap -> load map
-            ("Follow", "00:00:09.000", "00:00:09.300"),
-            ("the", "00:00:09.300", "00:00:09.500"),
-            ("load", "00:00:09.500", "00:00:09.800"),
-            ("map", "00:00:09.800", "00:00:10.100"),
-            ("for", "00:00:10.100", "00:00:10.300"),
-            ("gene", "00:00:10.300", "00:00:10.600"),
-            ("mapping.", "00:00:10.600", "00:00:11.100"),
+            # Structural Block 1: "1. Genetic Mapping (Linkage Mapping)"
+            ("1.", "00:00:07.000", "00:00:07.300"),
+            ("genetic", "00:00:07.300", "00:00:07.800"),
+            ("mapping", "00:00:07.800", "00:00:08.300"),
+            ("linkage", "00:00:08.300", "00:00:08.900"),
+            ("mapping.", "00:00:08.900", "00:00:09.500"),
 
-            # 4. crossing over -> cross over
-            ("Recombination", "00:00:13.000", "00:00:13.600"),
-            ("occurs", "00:00:13.600", "00:00:14.000"),
-            ("during", "00:00:14.000", "00:00:14.300"),
-            ("cross", "00:00:14.300", "00:00:14.700"),
-            ("over.", "00:00:14.700", "00:00:15.200")
+            # Structural Block 2: "Advantages: High Accuracy"
+            ("advantages", "00:00:12.000", "00:00:12.400"),
+            ("high", "00:00:12.400", "00:00:12.800"),
+            ("accuracy.", "00:00:12.800", "00:00:13.400"),
+
+            # Structural Block 3: "Limitations: Time Consuming"
+            ("limitations", "00:00:15.000", "00:00:15.400"),
+            ("time", "00:00:15.400", "00:00:15.800"),
+            ("consuming.", "00:00:15.800", "00:00:16.300"),
+
+            # Structural Block 4: "Applications: Whole Genome Sequencing"
+            ("applications", "00:00:18.000", "00:00:18.400"),
+            ("whole", "00:00:18.400", "00:00:18.800"),
+            ("genome", "00:00:18.800", "00:00:19.200"),
+            ("sequencing.", "00:00:19.200", "00:00:19.700")
         ]
 
-    def test_phonetic_normalization(self):
-        p1 = phonetic_normalize("Sanger sequencing")
-        p2 = phonetic_normalize("Sangal sequencing")
-        self.assertIn("SKNSNK", p1)
-        self.assertIn("SKNSNK", p2)
+    def test_adaptive_search_window_calculation(self):
+        w1 = compute_adaptive_search_window(False, False, False)
+        self.assertEqual(w1, BASE_SEARCH_WINDOW)
 
-    def test_phonetic_rescue_matches(self):
+        w2 = compute_adaptive_search_window(True, True, True)
+        self.assertEqual(w2, BASE_SEARCH_WINDOW + 450)
+        self.assertTrue(w2 <= MAX_SEARCH_WINDOW)
+
+    def test_structural_block_recovery(self):
+        sections = parse_script_hierarchical(self.script_text)
+        all_sents = []
+        for sec in sections:
+            if sec.heading_sentence:
+                all_sents.append(sec.heading_sentence.raw_text)
+            for b in sec.blocks:
+                for s in b.sentences:
+                    all_sents.append(s.raw_text)
+
+        # Verify grouped structural labels
+        self.assertTrue(any("Advantages: High Accuracy" in s for s in all_sents))
+        self.assertTrue(any("Limitations: Time Consuming" in s for s in all_sents))
+        self.assertTrue(any("Applications: Whole Genome Sequencing" in s for s in all_sents))
+
+    def test_alignment_diagnostics_and_failure_analytics(self):
         results = align_script(
             self.transcript_tuples,
             self.script_text,
-            min_confidence=85.0,
-            phonetic_threshold=80.0
+            min_confidence=70.0,
+            debug_alignment=True
         )
 
-        self.assertEqual(len(results), 5)
+        self.assertTrue(len(results) > 0)
 
-        # Matched rescued sentences
-        matched_results = [r for r in results if r.get("matched")]
-        self.assertTrue(len(matched_results) >= 4)
-
-        for s in matched_results:
-            self.assertIn(s.get("match_type"), ("normal", "phonetic"))
-
-        # Unspoken sentence (false positive prevention)
-        s5 = results[4]
-        self.assertFalse(s5.get("matched", True))
+        # Verify rejection reason recorded for unspoken sentence
+        unspoken = [r for r in results if "never spoken" in r["sentence"]]
+        self.assertEqual(len(unspoken), 1)
+        self.assertFalse(unspoken[0].get("matched", True))
+        self.assertIn("rejection_reason", unspoken[0])
+        self.assertIn(unspoken[0]["rejection_reason"], (RejectionReason.NO_CANDIDATES.value, RejectionReason.BELOW_THRESHOLD.value))
 
 
 if __name__ == "__main__":
