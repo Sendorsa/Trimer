@@ -1,0 +1,90 @@
+..Aligning script sentences:   0%|          | 0/6 [00:00<?, ?sentence/s]Aligning script sentences: 100%|██████████| 6/6 [00:00<00:00, 370.59sentence/s]
+.
+[SECTION ALIGNMENT]
+Heading: "What is Gene Mapping?"
+Transcript Index: 0
+
+[SECTION ALIGNMENT]
+Heading: "Types of Gene Mapping"
+Transcript Index: 2
+
+[BLOCK ALIGNMENT]
+Block ID: 0
+Region: [3-21]
+Expanded Region: [0-21]
+Aligning script sentences:   0%|          | 0/6 [00:00<?, ?sentence/s]
+[ALIGNMENT REJECTED]
+Sentence: "Limitations: - Time-consuming - Expensive This sentence was never spoken in the video."
+Section: "Types of Gene Mapping"
+Block ID: 0
+Search Region: [0-21]
+Candidate Count: 180
+Best Score: 49.4
+
+[RESCUE FAILED]
+Sentence: "Limitations: - Time-consuming - Expensive This sentence was never spoken in the video."
+Best Rescue Score: 49.4
+Aligning script sentences: 100%|██████████| 6/6 [00:00<00:00, 420.82sentence/s]
+
+==================================================
+ALIGNMENT FAILURE ANALYTICS SUMMARY
+==================================================
+Total Sentences:     6
+Matched Sentences:   5 (83.3%)
+Unmatched Sentences: 1 (16.7%)
+
+Failure Reason Breakdown:
+  - NO_CANDIDATES         : 0
+  - BELOW_THRESHOLD       : 1
+  - MONOTONIC_REJECTED    : 0
+  - OUTSIDE_WINDOW        : 0
+  - BLOCK_ALIGNMENT_FAILED: 0
+==================================================
+.[LOG FILE]
+alignment_run_20260830_125045.txt
+.
+[SECTION ALIGNMENT]
+Heading: "What is Gene Mapping?"
+Transcript Index: 0
+
+[SECTION ALIGNMENT]
+Heading: "Types of Gene Mapping"
+Transcript Index: 2
+
+[BLOCK ALIGNMENT]
+Block ID: 0
+Region: [3-21]
+Expanded Region: [0-21]
+Aligning script sentences:   0%|          | 0/6 [00:00<?, ?sentence/s]
+[ALIGNMENT REJECTED]
+Sentence: "Limitations: - Time-consuming - Expensive This sentence was never spoken in the video."
+Section: "Types of Gene Mapping"
+Block ID: 0
+Search Region: [0-21]
+Candidate Count: 180
+Best Score: 49.4
+
+[RESCUE FAILED]
+Sentence: "Limitations: - Time-consuming - Expensive This sentence was never spoken in the video."
+Best Rescue Score: 49.4
+Aligning script sentences: 100%|██████████| 6/6 [00:00<00:00, 434.28sentence/s]
+
+==================================================
+ALIGNMENT FAILURE ANALYTICS SUMMARY
+==================================================
+Total Sentences:     6
+Matched Sentences:   5 (83.3%)
+Unmatched Sentences: 1 (16.7%)
+
+Failure Reason Breakdown:
+  - NO_CANDIDATES         : 0
+  - BELOW_THRESHOLD       : 1
+  - MONOTONIC_REJECTED    : 0
+  - OUTSIDE_WINDOW        : 0
+  - BLOCK_ALIGNMENT_FAILED: 0
+==================================================
+.
+----------------------------------------------------------------------
+Ran 6 tests in 0.059s
+
+OK

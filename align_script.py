@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-align_script.py - Bumblebee Stage 2 Alignment Engine with Hard Monotonicity & 250-Word Block Expansion
+align_script.py - Bumblebee Stage 2 Alignment Engine with ASR Normalization Layer
 
 Aligns noisy word-level transcripts produced by transcript.py with a ground-truth script file.
 
 Features:
-  1. Hard Monotonic Chronology Enforcement ([MONOTONIC REJECT] logging)
-  2. Configurable 250-Word Block Region Expansion (block_expansion_words = 250)
-  3. Neighbor-Based Rescue Pass (match_type = "rescue", [RESCUE SUCCESS] / [RESCUE FAILED])
-  4. Aggressive Structural Block Merging (groups subheadings + bullet points into single blocks)
-  5. Section Heading Hard Anchors (prevents section drift across large transcripts)
-  6. Debug Instrumentation Logging ([BLOCK ALIGNMENT], [ALIGNMENT REJECTED], [MONOTONIC REJECT], [RESCUE SUCCESS], [RESCUE FAILED])
+  1. Lightweight ASR Normalization Layer (phrase-level replacements before scoring)
+  2. apply_asr_normalizations() helper function with [ASR NORMALIZED] debug logging
+  3. Section Heading Hard Anchors (sec.anchor_transcript_idx)
+  4. Block Region Expansion (BLOCK_EXPANSION = 150 words)
+  5. Neighbor Rescue Pass (+/- 20 words local search between prev/next matched bounds)
+  6. Debug Instrumentation Logging ([SECTION ALIGNMENT], [BLOCK ALIGNMENT], [ASR NORMALIZED], [ALIGNMENT REJECTED], [RESCUE SUCCESS], [RESCUE FAILED])
   7. Persistent Tee-Style Run Logger (alignment_run_YYYYMMDD_HHMMSS.txt)
-  8. 4-Part RapidFuzz Similarity Scoring & Phonetic Rescue Fallback
-  9. ASR Error Normalization Layer (extensible dictionary mapping)
+  8. Hard Monotonic Chronology Enforcement
+  9. 4-Part RapidFuzz Similarity Scoring & Phonetic Rescue Fallback
  10. Alignment Failure Analytics Summary
 """
 
@@ -55,16 +55,16 @@ except ImportError:
 DEBUG_ALIGNMENT = False
 BASE_SEARCH_WINDOW = 150
 MAX_SEARCH_WINDOW = 600
-BLOCK_EXPANSION_WORDS = 250
+BLOCK_EXPANSION = 150
 NEIGHBOR_RESCUE_MARGIN = 20
 
-# Common ASR error replacements for domain speech
+# 1. Centralized ASR Normalization Dictionary
 COMMON_ASR_NORMALIZATIONS: Dict[str, str] = {
     "road map": "roadmap",
     "load map": "roadmap",
     "sangal": "sanger",
     "nuclear types": "nucleotides",
-    "gene mapping": "genemapping",
+    "gene": "genes",
 }
 
 
@@ -202,7 +202,7 @@ class ScriptSection:
     blocks: List[ScriptBlock]
     start_idx: Optional[int] = None
     end_idx: Optional[int] = None
-    heading_anchor_idx: Optional[int] = None
+    anchor_transcript_idx: Optional[int] = None
 
 
 def parse_ffmpeg_timestamp(timestamp_str: str) -> float:
@@ -217,19 +217,49 @@ def parse_ffmpeg_timestamp(timestamp_str: str) -> float:
         return 0.0
 
 
-def clean_text(text: str, normalizations: Optional[Dict[str, str]] = None) -> str:
+# 2. Helper Function for ASR Phrase-Level Normalization
+def apply_asr_normalizations(
+    text: str,
+    normalizations: Optional[Dict[str, str]] = None,
+    debug: bool = False
+) -> str:
+    """
+    Applies phrase-level ASR corrections before scoring.
+    Performs case-insensitive whole-phrase replacements.
+    """
+    norm_dict = COMMON_ASR_NORMALIZATIONS if normalizations is None else normalizations
+    result = text.lower()
+
+    for phrase, target in norm_dict.items():
+        pattern = re.compile(r'\b' + re.escape(phrase) + r'\b', re.IGNORECASE)
+        if pattern.search(result):
+            if debug:
+                print(
+                    f"\n[ASR NORMALIZED]\n"
+                    f"Original: \"{phrase}\"\n"
+                    f"Normalized: \"{target}\"",
+                    file=sys.stderr
+                )
+            result = pattern.sub(target, result)
+
+    return result
+
+
+def clean_text(
+    text: str,
+    normalizations: Optional[Dict[str, str]] = None,
+    debug: bool = False
+) -> str:
     """
     Normalizes text by converting to lowercase, removing punctuation,
-    collapsing spaces, and applying ASR error normalizations.
+    collapsing spaces, and applying phrase-level ASR normalizations.
     """
     translator = str.maketrans("", "", string.punctuation)
     text_clean = text.translate(translator).lower()
     text_clean = " ".join(text_clean.split())
 
-    norm_dict = COMMON_ASR_NORMALIZATIONS if normalizations is None else normalizations
-    for err, fix in norm_dict.items():
-        if err in text_clean:
-            text_clean = text_clean.replace(err, fix)
+    # Apply phrase-level ASR corrections after text normalization and before scoring
+    text_clean = apply_asr_normalizations(text_clean, normalizations, debug=debug)
 
     return text_clean
 
@@ -335,8 +365,9 @@ def parse_script_hierarchical(
     normalizations: Optional[Dict[str, str]] = None
 ) -> List[ScriptSection]:
     """
-    STAGES 1 & 2 (Structural Parsing & Aggressive Structural Block Merging):
-    Groups subheadings, numbered items, and bullet lists into unified ScriptBlock objects.
+    STAGES 1 & 2 (Structural Parsing & Merging):
+    Splits script into sentences, detects element types, merges short structural
+    elements (< 3 words), and constructs ScriptBlock and ScriptSection objects.
     """
     raw_lines = re.split(r'\n+', script_content)
     parsed_sentences: List[ScriptSentence] = []
@@ -447,8 +478,7 @@ def parse_script_hierarchical(
             curr_section_heading = sentence
         else:
             curr_block_sentences.append(sentence)
-            # Group subheading and bullet items into unified block (up to 6 items)
-            if len(curr_block_sentences) >= 6:
+            if len(curr_block_sentences) >= 4:
                 finalize_block()
 
     finalize_section()
@@ -489,6 +519,7 @@ def score_candidate_advanced(
 
     Final Ranking Score = 0.6 * similarity + 0.4 * coverage + order_bonus - pause_penalty
     """
+    # Apply phrase-level ASR normalization to candidate text before scoring
     cand_clean_words = [w.clean_word for w in candidate_words if w.clean_word]
     cand_clean_text = " ".join(cand_clean_words)
 
@@ -684,15 +715,15 @@ def align_script(
     tie_threshold: float = 2.0,
     min_confidence: float = 70.0,
     monotonic_overlap: int = 20,
-    block_expansion_words: int = BLOCK_EXPANSION_WORDS,
+    block_expansion: int = BLOCK_EXPANSION,
     phonetic_threshold: float = 85.0,
     phonetic_top_candidates: int = 5,
     normalizations: Optional[Dict[str, str]] = None,
     debug_alignment: bool = DEBUG_ALIGNMENT
 ) -> List[dict]:
     """
-    Main Alignment Engine with Hard Monotonicity Enforcement, Configurable 250-Word Block Expansion,
-    Neighbor Rescue Pass, and Debug Instrumentation.
+    Main Hierarchical Alignment Function with ASR Normalization Layer, Section Heading Hard Anchors,
+    Block Region Expansion, Neighbor Rescue Pass, and Debug Instrumentation.
     """
     script_text = script_path
     if isinstance(script_path, str) and os.path.exists(script_path):
@@ -706,14 +737,14 @@ def align_script(
     # Stage 2: Parse Script into Sections -> Blocks -> Sentences
     sections = parse_script_hierarchical(script_text, normalizations)
 
-    # SECTION HEADING HARD ANCHORS & 250-WORD BLOCK EXPANSION
+    # SECTION HEADING HARD ANCHORS & BLOCK REGION EXPANSION
     for sec in sections:
         sec_words = []
         if sec.heading_sentence:
             sec_words.extend(sec.heading_sentence.words)
             h_anchors = [idx for w in sec.heading_sentence.words if w in inverted_index for idx in inverted_index[w]]
             if h_anchors:
-                sec.heading_anchor_idx = min(h_anchors)
+                sec.anchor_transcript_idx = min(h_anchors)
 
         for b in sec.blocks:
             sec_words.extend(b.clean_text.split())
@@ -723,14 +754,21 @@ def align_script(
             sec.start_idx = min(sec_anchors)
             sec.end_idx = max(sec_anchors)
         else:
-            sec.start_idx = sec.heading_anchor_idx if sec.heading_anchor_idx is not None else 0
+            sec.start_idx = sec.anchor_transcript_idx if sec.anchor_transcript_idx is not None else 0
             sec.end_idx = max(0, total_transcript_words - 1)
 
         # Enforce section heading hard anchor bound
-        if sec.heading_anchor_idx is not None:
-            sec.start_idx = max(sec.start_idx, max(0, sec.heading_anchor_idx - 50))
+        if sec.anchor_transcript_idx is not None:
+            sec.start_idx = max(sec.start_idx, max(0, sec.anchor_transcript_idx - 50))
+            if debug_alignment:
+                print(
+                    f"\n[SECTION ALIGNMENT]\n"
+                    f"Heading: \"{sec.heading_text}\"\n"
+                    f"Transcript Index: {sec.anchor_transcript_idx}",
+                    file=sys.stderr
+                )
 
-        # IMPROVEMENT 2: LARGER BLOCK EXPANSION (+/- 250 words)
+        # BLOCK REGION EXPANSION (+/- BLOCK_EXPANSION = 150 words)
         for b in sec.blocks:
             b_words = b.clean_text.split()
             b_anchors = [idx for w in set(b_words) if w in inverted_index for idx in inverted_index[w]]
@@ -741,20 +779,19 @@ def align_script(
                 b.start_idx = sec.start_idx
                 b.end_idx = sec.end_idx
 
-            if sec.heading_anchor_idx is not None:
-                b.start_idx = max(b.start_idx, max(0, sec.heading_anchor_idx - 50))
+            if sec.anchor_transcript_idx is not None:
+                b.start_idx = max(b.start_idx, max(0, sec.anchor_transcript_idx - 50))
 
-            # Expand block search region by +/- 250 words
-            b.expanded_start_idx = max(0, b.start_idx - block_expansion_words)
-            b.expanded_end_idx = min(total_transcript_words - 1, b.end_idx + block_expansion_words)
+            # Expand block search region by +/- BLOCK_EXPANSION words (default 150)
+            b.expanded_start_idx = max(0, b.start_idx - block_expansion)
+            b.expanded_end_idx = min(total_transcript_words - 1, b.end_idx + block_expansion)
 
-            # IMPROVEMENT 4: DEBUG INSTRUMENTATION - [BLOCK ALIGNMENT]
             if debug_alignment:
                 print(
                     f"\n[BLOCK ALIGNMENT]\n"
-                    f"Block {b.block_id}\n"
+                    f"Block ID: {b.block_id}\n"
                     f"Region: [{b.start_idx}-{b.end_idx}]\n"
-                    f"Expanded: [{b.expanded_start_idx}-{b.expanded_end_idx}]",
+                    f"Expanded Region: [{b.expanded_start_idx}-{b.expanded_end_idx}]",
                     file=sys.stderr
                 )
 
@@ -799,18 +836,16 @@ def align_script(
             section_changed=section_changed
         )
 
-        # IMPROVEMENT 1: HARD MONOTONIC ENFORCEMENT
-        # Minimum search boundary starts at (last_matched_end_idx - monotonic_overlap)
         min_search_idx = max(0, last_matched_end_idx - monotonic_overlap)
         max_search_idx = min(total_transcript_words - 1, max(block_max_idx, min_search_idx + adaptive_window_size))
 
-        # Candidate Generation inside Expanded Block Window
+        # Pass 1: Candidate Generation inside Expanded Block / Adaptive Window
         candidate_windows = generate_candidate_windows_bounded(
             sentence, transcript_words, word_frequency, inverted_index,
             min_search_idx=min_search_idx, max_search_idx=max_search_idx
         )
 
-        # Hard Monotonic Enforcement: Discard candidate windows ending before min_search_idx
+        # Enforce hard monotonic ordering: Discard candidates ending before min_search_idx
         valid_monotonic_windows = [cw for cw in candidate_windows if cw[1] >= min_search_idx]
 
         if not valid_monotonic_windows and candidate_windows:
@@ -818,14 +853,13 @@ def align_script(
             failure_analytics[rejection.value] += 1
             prev_unmatched = True
 
-            # IMPROVEMENT 4: DEBUG LOGGING - [MONOTONIC REJECT]
             if debug_alignment:
                 print(
-                    f"\n[MONOTONIC REJECT]\n"
+                    f"\n[ALIGNMENT REJECTED]\n"
                     f"Sentence: \"{sentence.raw_text}\"\n"
                     f"Section: \"{sentence.section_name}\"\n"
                     f"Block ID: {sentence.block_id}\n"
-                    f"Search Region: [{min_search_idx},{max_search_idx}]\n"
+                    f"Search Region: [{min_search_idx}-{max_search_idx}]\n"
                     f"Candidate Count: {len(candidate_windows)}\n"
                     f"Best Score: 0.0",
                     file=sys.stderr
@@ -851,9 +885,8 @@ def align_script(
                     f"Sentence: \"{sentence.raw_text}\"\n"
                     f"Section: \"{sentence.section_name}\"\n"
                     f"Block ID: {sentence.block_id}\n"
-                    f"Search Region: [{min_search_idx},{max_search_idx}]\n"
+                    f"Search Region: [{min_search_idx}-{max_search_idx}]\n"
                     f"Candidate Count: 0\n"
-                    f"Best Candidate: N/A\n"
                     f"Best Score: 0.0",
                     file=sys.stderr
                 )
@@ -899,44 +932,34 @@ def align_script(
         s_idx_b, _, _, _, _, _, cand_slice_b = best_cand
         matched_text_b = " ".join([w.raw_word for w in cand_slice_b]) if cand_slice_b else "N/A"
 
-        # IMPROVEMENT 4: DEBUG INSTRUMENTATION - [ALIGNMENT REJECTED]
         if debug_alignment:
             print(
                 f"\n[ALIGNMENT REJECTED]\n"
                 f"Sentence: \"{sentence.raw_text}\"\n"
                 f"Section: \"{sentence.section_name}\"\n"
                 f"Block ID: {sentence.block_id}\n"
-                f"Search Region: [{min_search_idx},{max_search_idx}]\n"
+                f"Search Region: [{min_search_idx}-{max_search_idx}]\n"
                 f"Candidate Count: {len(candidate_windows)}\n"
-                f"Best Candidate: \"{matched_text_b}\"\n"
                 f"Best Score: {conf:.1f}",
                 file=sys.stderr
             )
 
-        # =========================================================================
-        # IMPROVEMENT 3: NEIGHBOR-BASED RESCUE PASS
-        # Recovers BELOW_THRESHOLD sentences between two successfully matched bounds:
-        # rescue_min = max(0, prev_matched_end_idx - 20)
-        # rescue_max = min(transcript_length - 1, next_matched_start_idx + 20)
-        # =========================================================================
-        prev_bound = max(0, last_matched_end_idx - NEIGHBOR_RESCUE_MARGIN)
-        next_bound = total_transcript_words - 1
+        # NEIGHBOR RESCUE PASS (+/- 20 words)
+        rescue_start = max(0, last_matched_end_idx - NEIGHBOR_RESCUE_MARGIN)
+        rescue_end = total_transcript_words - 1
 
         for future_sent in all_sentences[idx + 1 : idx + 10]:
             f_block = sentence_block_map.get(future_sent.sentence_id)
             if f_block and f_block.start_idx is not None and f_block.start_idx > last_matched_end_idx:
-                next_bound = min(total_transcript_words - 1, f_block.end_idx + NEIGHBOR_RESCUE_MARGIN)
+                rescue_end = min(total_transcript_words - 1, f_block.end_idx + NEIGHBOR_RESCUE_MARGIN)
                 break
-
-        rescue_min = prev_bound
-        rescue_max = next_bound
 
         rescue_windows = generate_candidate_windows_bounded(
             sentence, transcript_words, word_frequency, inverted_index,
-            min_search_idx=rescue_min, max_search_idx=rescue_max
+            min_search_idx=rescue_start, max_search_idx=rescue_end
         )
 
-        r_cand, r_conf, _ = evaluate_candidate_windows(
+        r_cand, r_conf, r_type = evaluate_candidate_windows(
             sentence, rescue_windows, transcript_words,
             max_pause_seconds, pause_weight, tie_threshold,
             phonetic_threshold, phonetic_top_candidates
@@ -951,7 +974,6 @@ def align_script(
             prev_unmatched = False
             last_matched_end_idx = max(last_matched_end_idx, re_idx)
 
-            # IMPROVEMENT 4: DEBUG LOGGING - [RESCUE SUCCESS]
             if debug_alignment:
                 print(
                     f"\n[RESCUE SUCCESS]\n"
@@ -968,7 +990,7 @@ def align_script(
                 "confidence": round(r_conf, 2),
                 "confidence_level": calibrate_confidence_level(r_conf),
                 "matched": True,
-                "match_type": "rescue",
+                "match_type": r_type,
                 "matched_text": r_matched_text,
                 "start_idx": rs_idx,
                 "end_idx": re_idx
@@ -977,12 +999,11 @@ def align_script(
             failure_analytics[rejection.value] += 1
             prev_unmatched = True
 
-            # IMPROVEMENT 4: DEBUG LOGGING - [RESCUE FAILED]
             if debug_alignment:
                 print(
                     f"\n[RESCUE FAILED]\n"
                     f"Sentence: \"{sentence.raw_text}\"\n"
-                    f"Best Rescue Score: {r_conf:.1f} < {min_confidence:.1f}",
+                    f"Best Rescue Score: {r_conf:.1f}",
                     file=sys.stderr
                 )
 
@@ -1012,11 +1033,11 @@ def align_script(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with Hard Monotonicity & 250-Word Block Expansion")
+    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with ASR Normalization Layer")
     parser.add_argument("script_file", help="Path to ground-truth script text file")
     parser.add_argument("media_or_json_file", help="Path to video/audio file or transcript JSON file")
     parser.add_argument("--min-confidence", type=float, default=70.0, help="Minimum normal confidence threshold (default: 70.0)")
-    parser.add_argument("--block-expansion-words", type=int, default=BLOCK_EXPANSION_WORDS, help="Expanded block search margin in words (default: 250)")
+    parser.add_argument("--block-expansion", type=int, default=BLOCK_EXPANSION, help="Expanded block search margin in words (default: 150)")
     parser.add_argument("--debug-alignment", action="store_true", default=DEBUG_ALIGNMENT, help="Enable detailed alignment diagnostics & failure analytics")
 
     args = parser.parse_args()
@@ -1035,7 +1056,7 @@ def main():
                 transcript_tuples,
                 args.script_file,
                 min_confidence=args.min_confidence,
-                block_expansion_words=args.block_expansion_words,
+                block_expansion=args.block_expansion,
                 debug_alignment=args.debug_alignment
             )
             print(json.dumps(results, indent=2))
