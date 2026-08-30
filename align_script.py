@@ -1,28 +1,31 @@
 #!/usr/bin/env python3
 """
-align_script.py - Bumblebee Stage 2 Alignment Engine with Section Anchors & Neighbor Rescue Pass
+align_script.py - Bumblebee Stage 2 Alignment Engine with Persistent Tee-Style Logger
 
 Aligns noisy word-level transcripts produced by transcript.py with a ground-truth script file.
 
 Features:
-  1. Section Heading Hard Anchors (prevents section drift across large transcripts)
-  2. Block Region Expansion (+/- 150 words search region expansion for sentences)
-  3. Neighbor-Based Rescue Pass (+/- 20 words local search between prev/next matched bounds)
-  4. Debug Instrumentation Logging (Block Alignment, Expanded Regions, Rejections, Rescue Pass)
-  5. Phonetic Rescue Fallback Layer (Metaphone/Soundex + RapidFuzz top-N evaluation)
-  6. Monotonic Chronological Alignment (prevents backward timestamp jumps)
-  7. 4-Part RapidFuzz Similarity Scoring (ratio, token_set_ratio, partial_ratio, coverage)
-  8. ASR Error Normalization Layer (extensible dictionary mapping)
-  9. Alignment Failure Analytics Summary
- 10. Calibrated Confidence Levels (HIGH, MEDIUM, LOW)
+  1. Persistent Run Logging (automatically creates alignment_run_YYYYMMDD_HHMMSS.txt)
+  2. Tee-Style Stream Redirector (simultaneous terminal & log file output)
+  3. Section Heading Hard Anchors (prevents section drift across large transcripts)
+  4. Block Region Expansion (+/- 150 words search region expansion for sentences)
+  5. Neighbor-Based Rescue Pass (+/- 20 words local search between prev/next matched bounds)
+  6. Debug Instrumentation Logging (Block Alignment, Expanded Regions, Rejections, Rescue Pass)
+  7. Monotonic Chronological Alignment (prevents backward timestamp jumps)
+  8. 4-Part RapidFuzz Similarity Scoring (ratio, token_set_ratio, partial_ratio, coverage)
+  9. ASR Error Normalization Layer (extensible dictionary mapping)
+ 10. Alignment Failure Analytics Summary
+ 11. Calibrated Confidence Levels (HIGH, MEDIUM, LOW)
 """
 
 import os
 import re
 import sys
 import json
+import time
 import string
 import argparse
+import datetime
 import warnings
 from enum import Enum, auto
 from dataclasses import dataclass
@@ -39,18 +42,13 @@ except ImportError:
     sys.exit(1)
 
 try:
-    import jellyfish
-except ImportError:
-    jellyfish = None
-
-try:
     from tqdm import tqdm
 except ImportError:
     tqdm = None
 
 
 # Configuration Constants
-DEBUG_ALIGNMENT = True
+DEBUG_ALIGNMENT = False
 BASE_SEARCH_WINDOW = 150
 MAX_SEARCH_WINDOW = 600
 BLOCK_EXPANSION_MARGIN = 150
@@ -64,6 +62,79 @@ COMMON_ASR_NORMALIZATIONS: Dict[str, str] = {
     "nuclear types": "nucleotides",
     "gene mapping": "genemapping",
 }
+
+
+# =========================================================================
+# PERSISTENT TEE-STYLE RUN LOGGER (Python Standard Library Only)
+# =========================================================================
+
+class TeeStream:
+    """Tee adapter that writes text to both a terminal stream and a log file simultaneously."""
+    def __init__(self, original_stream, file_obj):
+        self.original_stream = original_stream
+        self.file_obj = file_obj
+
+    def write(self, data):
+        self.original_stream.write(data)
+        self.file_obj.write(data)
+        self.file_obj.flush()
+
+    def flush(self):
+        self.original_stream.flush()
+        self.file_obj.flush()
+
+
+class RunLoggerContext:
+    """Context manager for automatic Tee stream redirection and cleanup."""
+    def __init__(self, log_file, filepath, filename, start_time_sec):
+        self.log_file = log_file
+        self.filepath = filepath
+        self.filename = filename
+        self.start_time_sec = start_time_sec
+        self.orig_stdout = sys.stdout
+        self.orig_stderr = sys.stderr
+
+    def __enter__(self):
+        sys.stdout = TeeStream(self.orig_stdout, self.log_file)
+        sys.stderr = TeeStream(self.orig_stderr, self.log_file)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        duration = time.time() - self.start_time_sec
+        if exc_type is not None:
+            self.log_file.write(f"\n[EXCEPTION IN RUN]\n{exc_type.__name__}: {exc_val}\n")
+        
+        self.log_file.write(f"\n[RUNTIME SUMMARY]\nTotal Execution Time: {duration:.2f} seconds\n")
+        self.log_file.flush()
+        
+        sys.stdout = self.orig_stdout
+        sys.stderr = self.orig_stderr
+        self.log_file.close()
+
+
+def create_run_logger(log_dir: str = ".") -> RunLoggerContext:
+    """
+    Creates a timestamped text log file (alignment_run_YYYYMMDD_HHMMSS.txt)
+    and returns a context manager that redirects stdout and stderr simultaneously.
+    """
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y%m%d_%H%M%S")
+    filename = f"alignment_run_{timestamp}.txt"
+    filepath = os.path.join(log_dir, filename)
+
+    print(f"[LOG FILE]\n{filename}", file=sys.stderr)
+
+    log_file = open(filepath, "w", encoding="utf-8")
+
+    start_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    log_file.write("=" * 60 + "\n")
+    log_file.write(f"BUMBLEBEE ALIGNMENT RUN LOG\n")
+    log_file.write(f"Start Time: {start_str}\n")
+    log_file.write(f"Log File:   {filename}\n")
+    log_file.write("=" * 60 + "\n\n")
+    log_file.flush()
+
+    return RunLoggerContext(log_file, filepath, filename, time.time())
 
 
 class ScriptElementType(Enum):
@@ -157,28 +228,6 @@ def clean_text(text: str, normalizations: Optional[Dict[str, str]] = None) -> st
             text_clean = text_clean.replace(err, fix)
 
     return text_clean
-
-
-def phonetic_normalize(text: str) -> str:
-    """
-    Converts sentence text into space-separated phonetic representation (Metaphone/Soundex).
-    Example:
-      'Sanger sequencing' -> 'SNJR SKNSNK'
-      'Sangal sequencing' -> 'SNKL SKNSNK'
-    """
-    clean_words = text.lower().split()
-    codes = []
-    for w in clean_words:
-        code = None
-        if jellyfish:
-            try:
-                code = jellyfish.metaphone(w)
-                if not code:
-                    code = jellyfish.soundex(w)
-            except Exception:
-                code = None
-        codes.append(code if code else w)
-    return " ".join(codes)
 
 
 def detect_element_type(line: str) -> ScriptElementType:
@@ -411,6 +460,13 @@ def score_candidate_advanced(
 ) -> Tuple[float, float, float, float]:
     """
     STAGE 4: Improved 4-Part RapidFuzz Similarity & Multiset Coverage Scoring.
+
+    Similarity = 0.35 * fuzz.ratio
+               + 0.35 * fuzz.token_set_ratio
+               + 0.20 * fuzz.partial_ratio
+               + 0.10 * coverage
+
+    Final Ranking Score = 0.6 * similarity + 0.4 * coverage + order_bonus - pause_penalty
     """
     cand_clean_words = [w.clean_word for w in candidate_words if w.clean_word]
     cand_clean_text = " ".join(cand_clean_words)
@@ -540,16 +596,14 @@ def evaluate_candidate_windows(
     transcript_words: List[TranscriptWord],
     max_pause_seconds: float = 1.5,
     pause_weight: float = 5.0,
-    tie_threshold: float = 2.0,
-    phonetic_threshold: float = 85.0,
-    phonetic_top_candidates: int = 5
-) -> Tuple[Optional[Tuple], float, str, Optional[Tuple]]:
+    tie_threshold: float = 2.0
+) -> Tuple[Optional[Tuple], float]:
     """
-    Evaluates candidate windows using 4-part scoring + retake policy + Phonetic Rescue fallback.
-    Returns: (best_candidate, confidence, match_type, candidate_details)
+    Evaluates candidate windows using 4-part scoring & retake preference policy.
+    Returns: (best_candidate_tuple, confidence_score)
     """
     if not candidate_windows:
-        return None, 0.0, "unmatched", None
+        return None, 0.0
 
     evaluated_candidates = []
     for s_idx, e_idx in candidate_windows:
@@ -575,28 +629,7 @@ def evaluate_candidate_windows(
                 best_candidate = cand
 
     normal_confidence = max(0.0, min(100.0, best_candidate[5]))
-    
-    # Try Phonetic Rescue Fallback if normal confidence < 70.0
-    top_n_candidates = evaluated_candidates[:phonetic_top_candidates]
-    phonetic_script = phonetic_normalize(sentence.clean_text)
-
-    best_phonetic_cand = None
-    best_phonetic_score = float('-inf')
-
-    for cand in top_n_candidates:
-        c_slice = cand[6]
-        cand_clean_text = " ".join([w.clean_word for w in c_slice if w.clean_word])
-        phonetic_cand = phonetic_normalize(cand_clean_text)
-        p_score = float(rapidfuzz.fuzz.ratio(phonetic_script, phonetic_cand))
-
-        if p_score > best_phonetic_score:
-            best_phonetic_score = p_score
-            best_phonetic_cand = cand
-
-    if best_phonetic_cand and best_phonetic_score >= phonetic_threshold and best_phonetic_score > normal_confidence:
-        return best_phonetic_cand, best_phonetic_score, "phonetic", best_candidate
-
-    return best_candidate, normal_confidence, "normal", best_candidate
+    return best_candidate, normal_confidence
 
 
 def align_script(
@@ -607,14 +640,12 @@ def align_script(
     tie_threshold: float = 2.0,
     min_confidence: float = 70.0,
     monotonic_overlap: int = 20,
-    phonetic_threshold: float = 85.0,
-    phonetic_top_candidates: int = 5,
     normalizations: Optional[Dict[str, str]] = None,
     debug_alignment: bool = DEBUG_ALIGNMENT
 ) -> List[dict]:
     """
-    Main Hierarchical Alignment Function with Section Heading Anchors, Block Region Expansion,
-    Neighbor Rescue Pass, and Diagnostics.
+    Main Hierarchical Alignment Function with Section Heading Hard Anchors,
+    Block Region Expansion, Neighbor-Based Rescue Pass, and Persistent Diagnostics.
     """
     script_text = script_path
     if isinstance(script_path, str) and os.path.exists(script_path):
@@ -628,12 +659,22 @@ def align_script(
     # Stage 2: Parse Script into Sections -> Blocks -> Sentences
     sections = parse_script_hierarchical(script_text, normalizations)
 
-    # IMPROVEMENT 2: Section Heading Hard Anchors & Coarse Section/Block Localization
+    # =========================================================================
+    # IMPROVEMENT 1: SECTION HEADING HARD ANCHORS
+    # What is a section anchor?
+    # A section anchor is the verified transcript word index (section_anchor_idx)
+    # where the section heading title was spoken.
+    #
+    # Why does it reduce drift?
+    # In large lecture transcripts (10,000+ words), sentences far down in the
+    # script can drift backward if early candidates match common generic words.
+    # Binding all blocks in a section to start at >= max(0, section_anchor_idx - 50)
+    # acts as a hard checkpoint that anchors the entire section's candidate search.
+    # =========================================================================
     for sec in sections:
         sec_words = []
         if sec.heading_sentence:
             sec_words.extend(sec.heading_sentence.words)
-            # Find hard anchor index for section heading
             h_anchors = [idx for w in sec.heading_sentence.words if w in inverted_index for idx in inverted_index[w]]
             if h_anchors:
                 sec.heading_anchor_idx = min(h_anchors)
@@ -649,18 +690,22 @@ def align_script(
             sec.start_idx = sec.heading_anchor_idx if sec.heading_anchor_idx is not None else 0
             sec.end_idx = max(0, total_transcript_words - 1)
 
-        # Enforce section heading hard anchor bound
+        # Enforce hard section anchor bound
         if sec.heading_anchor_idx is not None:
-            sec.start_idx = max(sec.start_idx, sec.heading_anchor_idx)
+            sec.start_idx = max(sec.start_idx, max(0, sec.heading_anchor_idx - 50))
 
-        if debug_alignment:
-            anchor_str = f" Anchor: {sec.heading_anchor_idx}" if sec.heading_anchor_idx is not None else ""
-            print(
-                f"\n[SECTION ALIGNMENT] Section: \"{sec.heading_text}\" | Region: [{sec.start_idx}-{sec.end_idx}]{anchor_str}",
-                file=sys.stderr
-            )
-
-        # IMPROVEMENT 1: Block Alignment & Block Region Expansion (+/- 150 words)
+        # =========================================================================
+        # IMPROVEMENT 2: BLOCK REGION EXPANSION (+/- 150 words)
+        # Why is expansion needed?
+        # Coarse block alignment might find a tight word range [start_idx, end_idx],
+        # but surrounding sentences in the paragraph may spill over slightly before
+        # or after.
+        #
+        # Why +/- 150 buffer?
+        # A buffer of +/- 150 words covers ~30-45 seconds of speech padding,
+        # ensuring all sentences in the block remain discoverable without triggering
+        # expensive global transcript scans.
+        # =========================================================================
         for b in sec.blocks:
             b_words = b.clean_text.split()
             b_anchors = [idx for w in set(b_words) if w in inverted_index for idx in inverted_index[w]]
@@ -672,15 +717,18 @@ def align_script(
                 b.end_idx = sec.end_idx
 
             if sec.heading_anchor_idx is not None:
-                b.start_idx = max(b.start_idx, sec.heading_anchor_idx)
+                b.start_idx = max(b.start_idx, max(0, sec.heading_anchor_idx - 50))
 
-            # Block Region Expansion (+/- 150 words)
+            # Expand block search region by +/- 150 words
             b.expanded_start_idx = max(0, b.start_idx - BLOCK_EXPANSION_MARGIN)
             b.expanded_end_idx = min(total_transcript_words - 1, b.end_idx + BLOCK_EXPANSION_MARGIN)
 
             if debug_alignment:
                 print(
-                    f"[BLOCK ALIGNMENT]   Block {b.block_id}: \"{b.raw_text[:35]}...\" | Region: [{b.start_idx}-{b.end_idx}] | Expanded: [{b.expanded_start_idx}-{b.expanded_end_idx}]",
+                    f"\n[BLOCK ALIGNMENT]\n"
+                    f"Block {b.block_id}\n"
+                    f"Region: [{b.start_idx}-{b.end_idx}]\n"
+                    f"Expanded: [{b.expanded_start_idx}-{b.expanded_end_idx}]",
                     file=sys.stderr
                 )
 
@@ -728,7 +776,7 @@ def align_script(
         min_search_idx = max(0, last_matched_end_idx - monotonic_overlap)
         max_search_idx = min(total_transcript_words - 1, max(block_max_idx, min_search_idx + adaptive_window_size))
 
-        # PASS 1: Candidate Generation inside Expanded Block / Adaptive Window
+        # Pass 1: Candidate Generation inside Expanded Block / Adaptive Window
         candidate_windows = generate_candidate_windows_bounded(
             sentence, transcript_words, word_frequency, inverted_index,
             min_search_idx=min_search_idx, max_search_idx=max_search_idx
@@ -749,14 +797,13 @@ def align_script(
             if debug_alignment:
                 print(
                     f"\n[ALIGNMENT REJECTED]\n"
-                    f"  Sentence: \"{sentence.raw_text}\"\n"
-                    f"  Section: \"{sentence.section_name}\"\n"
-                    f"  Block ID: {sentence.block_id}\n"
-                    f"  Search Region: [{min_search_idx}, {max_search_idx}]\n"
-                    f"  Candidate Count: 0\n"
-                    f"  Best Candidate Text: N/A\n"
-                    f"  Best Score: 0.00\n"
-                    f"  Rejection Reason: {rejection.value}",
+                    f"Sentence: \"{sentence.raw_text}\"\n"
+                    f"Section: \"{sentence.section_name}\"\n"
+                    f"Block ID: {sentence.block_id}\n"
+                    f"Search Region: [{min_search_idx},{max_search_idx}]\n"
+                    f"Candidate Count: 0\n"
+                    f"Best Candidate: N/A\n"
+                    f"Best Score: 0.0",
                     file=sys.stderr
                 )
 
@@ -767,10 +814,9 @@ def align_script(
             }
             continue
 
-        best_cand, conf, match_type, best_details = evaluate_candidate_windows(
+        best_cand, conf = evaluate_candidate_windows(
             sentence, candidate_windows, transcript_words,
-            max_pause_seconds, pause_weight, tie_threshold,
-            phonetic_threshold, phonetic_top_candidates
+            max_pause_seconds, pause_weight, tie_threshold
         )
 
         if best_cand and conf >= min_confidence:
@@ -782,12 +828,6 @@ def align_script(
             prev_unmatched = False
             last_matched_end_idx = max(last_matched_end_idx, e_idx)
 
-            if debug_alignment:
-                print(
-                    f"[SENTENCE ALIGNMENT] Sentence: \"{sentence.raw_text[:40]}\" | Region: [{s_idx}-{e_idx}] (Score: {conf:.1f}, Type: {match_type})",
-                    file=sys.stderr
-                )
-
             alignment_results[idx] = {
                 "sentence": sentence.raw_text,
                 "start": start_fmt,
@@ -795,38 +835,40 @@ def align_script(
                 "confidence": round(conf, 2),
                 "confidence_level": calibrate_confidence_level(conf),
                 "matched": True,
-                "match_type": match_type,
                 "matched_text": matched_text,
                 "start_idx": s_idx,
                 "end_idx": e_idx
             }
             continue
 
-        # Sentence failed initial pass -> Mark BELOW_THRESHOLD rejection for diagnostic log
+        # Sentence failed initial pass -> Emit [ALIGNMENT REJECTED] log
         rejection = RejectionReason.BELOW_THRESHOLD
-        s_idx_b, _, _, _, _, _, cand_slice_b = best_details if best_details else best_cand
+        s_idx_b, _, _, _, _, _, cand_slice_b = best_cand
         matched_text_b = " ".join([w.raw_word for w in cand_slice_b]) if cand_slice_b else "N/A"
 
         if debug_alignment:
             print(
                 f"\n[ALIGNMENT REJECTED]\n"
-                f"  Sentence: \"{sentence.raw_text}\"\n"
-                f"  Section: \"{sentence.section_name}\"\n"
-                f"  Block ID: {sentence.block_id}\n"
-                f"  Search Region: [{min_search_idx}, {max_search_idx}]\n"
-                f"  Candidate Count: {len(candidate_windows)}\n"
-                f"  Best Candidate Text: \"{matched_text_b}\"\n"
-                f"  Best Score: {conf:.2f}\n"
-                f"  Rejection Reason: {rejection.value}",
+                f"Sentence: \"{sentence.raw_text}\"\n"
+                f"Section: \"{sentence.section_name}\"\n"
+                f"Block ID: {sentence.block_id}\n"
+                f"Search Region: [{min_search_idx},{max_search_idx}]\n"
+                f"Candidate Count: {len(candidate_windows)}\n"
+                f"Best Candidate: \"{matched_text_b}\"\n"
+                f"Best Score: {conf:.1f}",
                 file=sys.stderr
             )
 
+        # =========================================================================
         # IMPROVEMENT 3: NEIGHBOR-BASED RESCUE PASS
-        # Search region between prev_matched_end and next_matched_start +/- 20 words
+        # Recovers sentences skipped between two successfully matched neighbors:
+        # rescue_min = max(0, prev_matched_end_idx - 20)
+        # rescue_max = min(transcript_length - 1, next_matched_start_idx + 20)
+        # =========================================================================
         prev_bound = max(0, last_matched_end_idx - NEIGHBOR_RESCUE_MARGIN)
-
-        # Look ahead for next matched / coarsely anchored sentence
         next_bound = total_transcript_words - 1
+
+        # Look ahead to find next matched sentence start index
         for future_sent in all_sentences[idx + 1 : idx + 10]:
             f_block = sentence_block_map.get(future_sent.sentence_id)
             if f_block and f_block.start_idx is not None and f_block.start_idx > last_matched_end_idx:
@@ -841,10 +883,9 @@ def align_script(
             min_search_idx=rescue_min, max_search_idx=rescue_max
         )
 
-        r_cand, r_conf, r_type, _ = evaluate_candidate_windows(
+        r_cand, r_conf = evaluate_candidate_windows(
             sentence, rescue_windows, transcript_words,
-            max_pause_seconds, pause_weight, tie_threshold,
-            phonetic_threshold, phonetic_top_candidates
+            max_pause_seconds, pause_weight, tie_threshold
         )
 
         if r_cand and r_conf >= min_confidence:
@@ -858,7 +899,10 @@ def align_script(
 
             if debug_alignment:
                 print(
-                    f"[RESCUE PASS SUCCESS] Sentence: \"{sentence.raw_text[:40]}\" | Rescued Region: [{rs_idx}-{re_idx}] (Score: {r_conf:.1f})",
+                    f"\n[RESCUE PASS SUCCESS]\n"
+                    f"Sentence: \"{sentence.raw_text}\"\n"
+                    f"Region: [{rs_idx}-{re_idx}]\n"
+                    f"Score: {r_conf:.1f}",
                     file=sys.stderr
                 )
 
@@ -869,7 +913,6 @@ def align_script(
                 "confidence": round(r_conf, 2),
                 "confidence_level": calibrate_confidence_level(r_conf),
                 "matched": True,
-                "match_type": f"rescue_{r_type}",
                 "matched_text": r_matched_text,
                 "start_idx": rs_idx,
                 "end_idx": re_idx
@@ -880,7 +923,9 @@ def align_script(
 
             if debug_alignment:
                 print(
-                    f"[RESCUE PASS FAILED]  Sentence: \"{sentence.raw_text[:40]}\" | Best Rescue Score: {r_conf:.2f} < {min_confidence:.1f}",
+                    f"\n[RESCUE PASS FAILED]\n"
+                    f"Sentence: \"{sentence.raw_text}\"\n"
+                    f"Best Rescue Score: {r_conf:.1f} < {min_confidence:.1f}",
                     file=sys.stderr
                 )
 
@@ -910,7 +955,7 @@ def align_script(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with Section Anchors & Neighbor Rescue Pass")
+    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with Persistent Logger")
     parser.add_argument("script_file", help="Path to ground-truth script text file")
     parser.add_argument("media_or_json_file", help="Path to video/audio file or transcript JSON file")
     parser.add_argument("--min-confidence", type=float, default=70.0, help="Minimum normal confidence threshold (default: 70.0)")
@@ -918,24 +963,26 @@ def main():
 
     args = parser.parse_args()
 
-    try:
-        if args.media_or_json_file.endswith('.json'):
-            with open(args.media_or_json_file, 'r', encoding='utf-8') as f:
-                transcript_tuples = json.load(f)
-        else:
-            from transcript import generate_transcript
-            transcript_tuples = generate_transcript(args.media_or_json_file)
+    # Initialize persistent Tee logger for run
+    with create_run_logger() as logger:
+        try:
+            if args.media_or_json_file.endswith('.json'):
+                with open(args.media_or_json_file, 'r', encoding='utf-8') as f:
+                    transcript_tuples = json.load(f)
+            else:
+                from transcript import generate_transcript
+                transcript_tuples = generate_transcript(args.media_or_json_file)
 
-        results = align_script(
-            transcript_tuples,
-            args.script_file,
-            min_confidence=args.min_confidence,
-            debug_alignment=args.debug_alignment
-        )
-        print(json.dumps(results, indent=2))
-    except Exception as e:
-        print(f"Error during alignment: {e}", file=sys.stderr)
-        sys.exit(1)
+            results = align_script(
+                transcript_tuples,
+                args.script_file,
+                min_confidence=args.min_confidence,
+                debug_alignment=args.debug_alignment
+            )
+            print(json.dumps(results, indent=2))
+        except Exception as e:
+            print(f"Error during alignment: {e}", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":

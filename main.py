@@ -3,7 +3,7 @@
 main.py - Bumblebee Entry Point
 
 Connects Stage 1 (in-memory speech-to-text transcript generation) directly
-with Stage 2 (in-memory script alignment engine with Diagnostics & Adaptive Localization).
+with Stage 2 (in-memory script alignment engine with Persistent Logger).
 
 Usage:
     python3 main.py <video_file_path> <script_file_path> [--debug-alignment]
@@ -13,7 +13,7 @@ import sys
 import json
 import argparse
 from transcript import generate_transcript
-from align_script import align_script, DEBUG_ALIGNMENT
+from align_script import align_script, create_run_logger, DEBUG_ALIGNMENT
 
 
 def main():
@@ -25,23 +25,25 @@ def main():
 
     args = parser.parse_args()
 
-    try:
-        # Stage 1: Generate transcript in memory
-        transcript = generate_transcript(args.video_path)
+    # Initialize persistent Tee logger for alignment run
+    with create_run_logger() as logger:
+        try:
+            # Stage 1: Generate transcript in memory
+            transcript = generate_transcript(args.video_path)
 
-        # Stage 2: Align script using in-memory transcript
-        results = align_script(
-            transcript,
-            args.script_path,
-            min_confidence=args.min_confidence,
-            debug_alignment=args.debug_alignment
-        )
+            # Stage 2: Align script using in-memory transcript
+            results = align_script(
+                transcript,
+                args.script_path,
+                min_confidence=args.min_confidence,
+                debug_alignment=args.debug_alignment
+            )
 
-        # Print alignment output JSON
-        print(json.dumps(results, indent=2))
-    except Exception as e:
-        print(f"Error executing Bumblebee pipeline: {e}", file=sys.stderr)
-        sys.exit(1)
+            # Print alignment output JSON
+            print(json.dumps(results, indent=2))
+        except Exception as e:
+            print(f"Error executing Bumblebee pipeline: {e}", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":
