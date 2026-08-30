@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """
-align_script.py - Bumblebee Stage 2 Alignment Engine with ASR Normalization Layer
+align_script.py - Bumblebee Stage 2 Alignment Engine with Context-Aware Scoring
 
 Aligns noisy word-level transcripts produced by transcript.py with a ground-truth script file.
 
 Features:
-  1. Lightweight ASR Normalization Layer (phrase-level replacements before scoring)
-  2. apply_asr_normalizations() helper function with [ASR NORMALIZED] debug logging
-  3. Section Heading Hard Anchors (sec.anchor_transcript_idx)
-  4. Block Region Expansion (BLOCK_EXPANSION = 150 words)
-  5. Neighbor Rescue Pass (+/- 20 words local search between prev/next matched bounds)
-  6. Debug Instrumentation Logging ([SECTION ALIGNMENT], [BLOCK ALIGNMENT], [ASR NORMALIZED], [ALIGNMENT REJECTED], [RESCUE SUCCESS], [RESCUE FAILED])
-  7. Persistent Tee-Style Run Logger (alignment_run_YYYYMMDD_HHMMSS.txt)
-  8. Hard Monotonic Chronology Enforcement
-  9. 4-Part RapidFuzz Similarity Scoring & Phonetic Rescue Fallback
- 10. Alignment Failure Analytics Summary
+  1. Context-Aware Scoring (evaluates CONTEXT_LEFT_WORDS=3 and CONTEXT_RIGHT_WORDS=3 surrounding context)
+  2. Multi-Metric Scoring Formula:
+     final_score = 0.30 * similarity + 0.25 * coverage + 0.25 * context + 0.10 * order_bonus + 0.10 * phonetic_bonus - pause_penalty
+  3. Phonetic Similarity Booster (Metaphone/Soundex score booster)
+  4. Order-Aware Match Bonus (LCS token preservation ratio)
+  5. Section Heading Hard Anchors (sec.anchor_transcript_idx)
+  6. Block Region Expansion (BLOCK_EXPANSION = 150 words)
+  7. Neighbor Rescue Pass (+/- 20 words local search between prev/next matched bounds)
+  8. Debug Instrumentation Logging ([CONTEXT SCORE], [CONTEXT BOOST], [BLOCK ALIGNMENT], [ALIGNMENT REJECTED], [RESCUE SUCCESS], [RESCUE FAILED])
+  9. Persistent Tee-Style Run Logger (alignment_run_YYYYMMDD_HHMMSS.txt)
+ 10. Hard Monotonic Chronology Enforcement
+ 11. Alignment Failure Analytics Summary
+ 12. Calibrated Confidence Levels (HIGH, MEDIUM, LOW)
 """
 
 import os
@@ -57,15 +60,8 @@ BASE_SEARCH_WINDOW = 150
 MAX_SEARCH_WINDOW = 600
 BLOCK_EXPANSION = 150
 NEIGHBOR_RESCUE_MARGIN = 20
-
-# 1. Centralized ASR Normalization Dictionary
-COMMON_ASR_NORMALIZATIONS: Dict[str, str] = {
-    "road map": "roadmap",
-    "load map": "roadmap",
-    "sangal": "sanger",
-    "nuclear types": "nucleotides",
-    "gene": "genes",
-}
+CONTEXT_LEFT_WORDS = 3
+CONTEXT_RIGHT_WORDS = 3
 
 
 # =========================================================================
@@ -217,51 +213,13 @@ def parse_ffmpeg_timestamp(timestamp_str: str) -> float:
         return 0.0
 
 
-# 2. Helper Function for ASR Phrase-Level Normalization
-def apply_asr_normalizations(
-    text: str,
-    normalizations: Optional[Dict[str, str]] = None,
-    debug: bool = False
-) -> str:
+def clean_text(text: str) -> str:
     """
-    Applies phrase-level ASR corrections before scoring.
-    Performs case-insensitive whole-phrase replacements.
-    """
-    norm_dict = COMMON_ASR_NORMALIZATIONS if normalizations is None else normalizations
-    result = text.lower()
-
-    for phrase, target in norm_dict.items():
-        pattern = re.compile(r'\b' + re.escape(phrase) + r'\b', re.IGNORECASE)
-        if pattern.search(result):
-            if debug:
-                print(
-                    f"\n[ASR NORMALIZED]\n"
-                    f"Original: \"{phrase}\"\n"
-                    f"Normalized: \"{target}\"",
-                    file=sys.stderr
-                )
-            result = pattern.sub(target, result)
-
-    return result
-
-
-def clean_text(
-    text: str,
-    normalizations: Optional[Dict[str, str]] = None,
-    debug: bool = False
-) -> str:
-    """
-    Normalizes text by converting to lowercase, removing punctuation,
-    collapsing spaces, and applying phrase-level ASR normalizations.
+    Standard text normalization: lowercasing, stripping punctuation, collapsing whitespace.
     """
     translator = str.maketrans("", "", string.punctuation)
     text_clean = text.translate(translator).lower()
-    text_clean = " ".join(text_clean.split())
-
-    # Apply phrase-level ASR corrections after text normalization and before scoring
-    text_clean = apply_asr_normalizations(text_clean, normalizations, debug=debug)
-
-    return text_clean
+    return " ".join(text_clean.split())
 
 
 def phonetic_normalize(text: str) -> str:
@@ -325,8 +283,7 @@ def split_sentences_safely(text: str) -> List[str]:
 
 
 def normalize_transcript(
-    transcript_tuples: list,
-    normalizations: Optional[Dict[str, str]] = None
+    transcript_tuples: list
 ) -> Tuple[List[TranscriptWord], Dict[str, int], Dict[str, List[int]]]:
     """STAGE 1: Normalizes transcript words and builds word_frequency & inverted_index."""
     words_list: List[TranscriptWord] = []
@@ -335,7 +292,7 @@ def normalize_transcript(
 
     for idx, item in enumerate(transcript_tuples):
         raw_word, start_fmt, end_fmt = item[0], item[1], item[2]
-        clean_w = clean_text(raw_word, normalizations)
+        clean_w = clean_text(raw_word)
 
         start_sec = parse_ffmpeg_timestamp(start_fmt)
         end_sec = parse_ffmpeg_timestamp(end_fmt)
@@ -361,8 +318,7 @@ def normalize_transcript(
 
 
 def parse_script_hierarchical(
-    script_content: str,
-    normalizations: Optional[Dict[str, str]] = None
+    script_content: str
 ) -> List[ScriptSection]:
     """
     STAGES 1 & 2 (Structural Parsing & Merging):
@@ -396,7 +352,7 @@ def parse_script_hierarchical(
             s_trimmed = s.strip()
             if not s_trimmed:
                 continue
-            cleaned = clean_text(s_trimmed, normalizations)
+            cleaned = clean_text(s_trimmed)
             c_words = cleaned.split()
             if not c_words:
                 continue
@@ -413,7 +369,7 @@ def parse_script_hierarchical(
             sent_id += 1
 
     if pending_prefix:
-        cleaned = clean_text(pending_prefix, normalizations)
+        cleaned = clean_text(pending_prefix)
         c_words = cleaned.split()
         if c_words:
             parsed_sentences.append(ScriptSentence(
@@ -503,45 +459,106 @@ def compute_lcs_order_ratio(script_words: List[str], cand_words: List[str]) -> f
     return (lcs_len / float(m)) * 100.0
 
 
-def score_candidate_advanced(
+def extract_context_words(
+    all_sentences: List[ScriptSentence],
+    sent_idx: int,
+    candidate_slice_indices: Tuple[int, int],
+    transcript_words: List[TranscriptWord]
+) -> Tuple[str, str, str, str]:
+    """
+    Extracts up to CONTEXT_LEFT_WORDS (3) and CONTEXT_RIGHT_WORDS (3)
+    surrounding script and transcript candidate context strings.
+    """
+    s_idx, e_idx = candidate_slice_indices
+    total_transcript = len(transcript_words)
+
+    # 1. Transcript Context
+    cand_left_words = [w.clean_word for w in transcript_words[max(0, s_idx - CONTEXT_LEFT_WORDS) : s_idx] if w.clean_word]
+    cand_right_words = [w.clean_word for w in transcript_words[e_idx + 1 : min(total_transcript, e_idx + 1 + CONTEXT_RIGHT_WORDS)] if w.clean_word]
+    cand_left_str = " ".join(cand_left_words)
+    cand_right_str = " ".join(cand_right_words)
+
+    # 2. Script Context
+    script_left_words = []
+    if sent_idx > 0:
+        prev_sent = all_sentences[sent_idx - 1]
+        script_left_words = prev_sent.words[-CONTEXT_LEFT_WORDS:]
+
+    script_right_words = []
+    if sent_idx < len(all_sentences) - 1:
+        next_sent = all_sentences[sent_idx + 1]
+        script_right_words = next_sent.words[:CONTEXT_RIGHT_WORDS]
+
+    script_left_str = " ".join(script_left_words)
+    script_right_str = " ".join(script_right_words)
+
+    return script_left_str, cand_left_str, script_right_str, cand_right_str
+
+
+def score_candidate_context_aware(
     sentence: ScriptSentence,
-    candidate_words: List[TranscriptWord],
+    sent_idx: int,
+    all_sentences: List[ScriptSentence],
+    s_idx: int,
+    e_idx: int,
+    transcript_words: List[TranscriptWord],
     max_pause_seconds: float = 1.5,
-    pause_weight: float = 5.0
-) -> Tuple[float, float, float, float]:
+    pause_weight: float = 5.0,
+    debug: bool = False
+) -> Tuple[float, float, float, float, float, float]:
     """
-    STAGE 4: Improved 4-Part RapidFuzz Similarity & Multiset Coverage Scoring.
-
-    Similarity = 0.35 * fuzz.ratio
-               + 0.35 * fuzz.token_set_ratio
-               + 0.20 * fuzz.partial_ratio
-               + 0.10 * coverage
-
-    Final Ranking Score = 0.6 * similarity + 0.4 * coverage + order_bonus - pause_penalty
+    CONTEXT-AWARE SCORING FORMULA:
+    final_score = 0.30 * similarity_score
+                + 0.25 * coverage_score
+                + 0.25 * context_score
+                + 0.10 * ordered_match_bonus
+                + 0.10 * phonetic_bonus
+                - pause_penalty
     """
-    # Apply phrase-level ASR normalization to candidate text before scoring
+    candidate_words = transcript_words[s_idx : e_idx + 1]
     cand_clean_words = [w.clean_word for w in candidate_words if w.clean_word]
     cand_clean_text = " ".join(cand_clean_words)
 
+    # 1. Similarity Score (0-100)
     ratio_score = float(rapidfuzz.fuzz.ratio(sentence.clean_text, cand_clean_text))
     token_set_score = float(rapidfuzz.fuzz.token_set_ratio(sentence.clean_text, cand_clean_text))
     partial_score = float(rapidfuzz.fuzz.partial_ratio(sentence.clean_text, cand_clean_text))
+    similarity_score = 0.35 * ratio_score + 0.35 * token_set_score + 0.30 * partial_score
 
+    # 2. Coverage Score (0-100)
     script_counts = Counter(sentence.words)
     cand_counts = Counter(cand_clean_words)
     matched_words_count = sum(min(count, cand_counts.get(word, 0)) for word, count in script_counts.items())
     coverage_score = (matched_words_count / sentence.word_count) * 100.0 if sentence.word_count > 0 else 0.0
 
-    similarity = (
-        0.35 * ratio_score +
-        0.35 * token_set_score +
-        0.20 * partial_score +
-        0.10 * coverage_score
+    # 3. Context-Aware Score (0-100)
+    script_left, cand_left, script_right, cand_right = extract_context_words(
+        all_sentences, sent_idx, (s_idx, e_idx), transcript_words
     )
 
-    order_ratio = compute_lcs_order_ratio(sentence.words, cand_clean_words)
-    order_bonus = 0.05 * order_ratio
+    left_score = float(rapidfuzz.fuzz.ratio(script_left, cand_left)) if script_left and cand_left else 100.0
+    right_score = float(rapidfuzz.fuzz.ratio(script_right, cand_right)) if script_right and cand_right else 100.0
+    context_score = 0.5 * left_score + 0.5 * right_score
 
+    if debug:
+        print(
+            f"\n[CONTEXT SCORE]\n"
+            f"Sentence: \"{sentence.raw_text[:40]}\"\n"
+            f"Left Context Score: {left_score:.1f}\n"
+            f"Right Context Score: {right_score:.1f}\n"
+            f"Combined Context Score: {context_score:.1f}",
+            file=sys.stderr
+        )
+
+    # 4. Ordered Match Bonus (0-100)
+    ordered_match_bonus = compute_lcs_order_ratio(sentence.words, cand_clean_words)
+
+    # 5. Phonetic Booster (0-100)
+    phonetic_script = phonetic_normalize(sentence.clean_text)
+    phonetic_cand = phonetic_normalize(cand_clean_text)
+    phonetic_bonus = float(rapidfuzz.fuzz.ratio(phonetic_script, phonetic_cand))
+
+    # 6. Pause Penalty
     pause_penalty = 0.0
     for i in range(len(candidate_words) - 1):
         curr_word = candidate_words[i]
@@ -550,9 +567,27 @@ def score_candidate_advanced(
         if gap > max_pause_seconds:
             pause_penalty += (gap - max_pause_seconds) * pause_weight
 
-    ranking_score = (0.6 * similarity) + (0.4 * coverage_score) + order_bonus - pause_penalty
+    # Final Combined Ranking Score
+    final_score = (
+        0.30 * similarity_score +
+        0.25 * coverage_score +
+        0.25 * context_score +
+        0.10 * ordered_match_bonus +
+        0.10 * phonetic_bonus
+    ) - pause_penalty
 
-    return similarity, coverage_score, pause_penalty, ranking_score
+    base_score = 0.60 * similarity_score + 0.40 * coverage_score
+    if debug and final_score >= 70.0:
+        print(
+            f"\n[CONTEXT BOOST]\n"
+            f"Sentence: \"{sentence.raw_text[:40]}\"\n"
+            f"Base Score: {base_score:.1f}\n"
+            f"Context Score: {context_score:.1f}\n"
+            f"Final Score: {final_score:.1f}",
+            file=sys.stderr
+        )
+
+    return similarity_score, coverage_score, context_score, ordered_match_bonus, phonetic_bonus, final_score
 
 
 def generate_candidate_windows_bounded(
@@ -642,30 +677,32 @@ def calibrate_confidence_level(confidence: float) -> str:
         return "LOW"
 
 
-def evaluate_candidate_windows(
+def evaluate_candidate_windows_context_aware(
     sentence: ScriptSentence,
+    sent_idx: int,
+    all_sentences: List[ScriptSentence],
     candidate_windows: List[Tuple[int, int]],
     transcript_words: List[TranscriptWord],
     max_pause_seconds: float = 1.5,
     pause_weight: float = 5.0,
     tie_threshold: float = 2.0,
-    phonetic_threshold: float = 85.0,
-    phonetic_top_candidates: int = 5
-) -> Tuple[Optional[Tuple], float, str]:
+    debug: bool = False
+) -> Tuple[Optional[Tuple], float]:
     """
-    Evaluates candidate windows using 4-part scoring & Phonetic Rescue fallback.
-    Returns: (best_candidate_tuple, confidence_score, match_type)
+    Evaluates candidate windows using Context-Aware Scoring formula & retake policy.
+    Returns: (best_candidate_tuple, final_confidence_score)
     """
     if not candidate_windows:
-        return None, 0.0, "unmatched"
+        return None, 0.0
 
     evaluated_candidates = []
     for s_idx, e_idx in candidate_windows:
-        cand_slice = transcript_words[s_idx : e_idx + 1]
-        sim, cov, penalty, rank_score = score_candidate_advanced(
-            sentence, cand_slice, max_pause_seconds, pause_weight
+        sim, cov, ctx_score, order_bonus, phon_bonus, rank_score = score_candidate_context_aware(
+            sentence, sent_idx, all_sentences, s_idx, e_idx, transcript_words,
+            max_pause_seconds, pause_weight, debug=debug
         )
-        evaluated_candidates.append((s_idx, e_idx, sim, cov, penalty, rank_score, cand_slice))
+        cand_slice = transcript_words[s_idx : e_idx + 1]
+        evaluated_candidates.append((s_idx, e_idx, sim, cov, ctx_score, rank_score, cand_slice))
 
     evaluated_candidates.sort(key=lambda c: c[5], reverse=True)
     best_candidate = evaluated_candidates[0]
@@ -682,29 +719,8 @@ def evaluate_candidate_windows(
                 best_ranking_score = rank_score
                 best_candidate = cand
 
-    normal_confidence = max(0.0, min(100.0, best_candidate[5]))
-    
-    # Try Phonetic Rescue Fallback if normal confidence < 70.0
-    top_n_candidates = evaluated_candidates[:phonetic_top_candidates]
-    phonetic_script = phonetic_normalize(sentence.clean_text)
-
-    best_phonetic_cand = None
-    best_phonetic_score = float('-inf')
-
-    for cand in top_n_candidates:
-        c_slice = cand[6]
-        cand_clean_text = " ".join([w.clean_word for w in c_slice if w.clean_word])
-        phonetic_cand = phonetic_normalize(cand_clean_text)
-        p_score = float(rapidfuzz.fuzz.ratio(phonetic_script, phonetic_cand))
-
-        if p_score > best_phonetic_score:
-            best_phonetic_score = p_score
-            best_phonetic_cand = cand
-
-    if best_phonetic_cand and best_phonetic_score >= phonetic_threshold and best_phonetic_score > normal_confidence:
-        return best_phonetic_cand, best_phonetic_score, "phonetic"
-
-    return best_candidate, normal_confidence, "normal"
+    final_confidence = max(0.0, min(100.0, best_candidate[5]))
+    return best_candidate, final_confidence
 
 
 def align_script(
@@ -716,14 +732,11 @@ def align_script(
     min_confidence: float = 70.0,
     monotonic_overlap: int = 20,
     block_expansion: int = BLOCK_EXPANSION,
-    phonetic_threshold: float = 85.0,
-    phonetic_top_candidates: int = 5,
-    normalizations: Optional[Dict[str, str]] = None,
     debug_alignment: bool = DEBUG_ALIGNMENT
 ) -> List[dict]:
     """
-    Main Hierarchical Alignment Function with ASR Normalization Layer, Section Heading Hard Anchors,
-    Block Region Expansion, Neighbor Rescue Pass, and Debug Instrumentation.
+    Main Hierarchical Alignment Function with Context-Aware Alignment Scoring,
+    Section Heading Hard Anchors, Block Region Expansion, and Diagnostics.
     """
     script_text = script_path
     if isinstance(script_path, str) and os.path.exists(script_path):
@@ -731,11 +744,11 @@ def align_script(
             script_text = f.read()
 
     # Stage 1: Normalize Transcript & Build Inverted Index
-    transcript_words, word_frequency, inverted_index = normalize_transcript(transcript_tuples, normalizations)
+    transcript_words, word_frequency, inverted_index = normalize_transcript(transcript_tuples)
     total_transcript_words = len(transcript_words)
 
     # Stage 2: Parse Script into Sections -> Blocks -> Sentences
-    sections = parse_script_hierarchical(script_text, normalizations)
+    sections = parse_script_hierarchical(script_text)
 
     # SECTION HEADING HARD ANCHORS & BLOCK REGION EXPANSION
     for sec in sections:
@@ -757,7 +770,6 @@ def align_script(
             sec.start_idx = sec.anchor_transcript_idx if sec.anchor_transcript_idx is not None else 0
             sec.end_idx = max(0, total_transcript_words - 1)
 
-        # Enforce section heading hard anchor bound
         if sec.anchor_transcript_idx is not None:
             sec.start_idx = max(sec.start_idx, max(0, sec.anchor_transcript_idx - 50))
             if debug_alignment:
@@ -782,7 +794,6 @@ def align_script(
             if sec.anchor_transcript_idx is not None:
                 b.start_idx = max(b.start_idx, max(0, sec.anchor_transcript_idx - 50))
 
-            # Expand block search region by +/- BLOCK_EXPANSION words (default 150)
             b.expanded_start_idx = max(0, b.start_idx - block_expansion)
             b.expanded_end_idx = min(total_transcript_words - 1, b.end_idx + block_expansion)
 
@@ -839,13 +850,13 @@ def align_script(
         min_search_idx = max(0, last_matched_end_idx - monotonic_overlap)
         max_search_idx = min(total_transcript_words - 1, max(block_max_idx, min_search_idx + adaptive_window_size))
 
-        # Pass 1: Candidate Generation inside Expanded Block / Adaptive Window
+        # Candidate Generation inside Expanded Block / Adaptive Window
         candidate_windows = generate_candidate_windows_bounded(
             sentence, transcript_words, word_frequency, inverted_index,
             min_search_idx=min_search_idx, max_search_idx=max_search_idx
         )
 
-        # Enforce hard monotonic ordering: Discard candidates ending before min_search_idx
+        # Enforce hard monotonic ordering
         valid_monotonic_windows = [cw for cw in candidate_windows if cw[1] >= min_search_idx]
 
         if not valid_monotonic_windows and candidate_windows:
@@ -898,10 +909,9 @@ def align_script(
             }
             continue
 
-        best_cand, conf, match_type = evaluate_candidate_windows(
-            sentence, candidate_windows, transcript_words,
-            max_pause_seconds, pause_weight, tie_threshold,
-            phonetic_threshold, phonetic_top_candidates
+        best_cand, conf = evaluate_candidate_windows_context_aware(
+            sentence, idx, all_sentences, candidate_windows, transcript_words,
+            max_pause_seconds, pause_weight, tie_threshold, debug=debug_alignment
         )
 
         if best_cand and conf >= min_confidence:
@@ -920,7 +930,6 @@ def align_script(
                 "confidence": round(conf, 2),
                 "confidence_level": calibrate_confidence_level(conf),
                 "matched": True,
-                "match_type": match_type,
                 "matched_text": matched_text,
                 "start_idx": s_idx,
                 "end_idx": e_idx
@@ -959,10 +968,9 @@ def align_script(
             min_search_idx=rescue_start, max_search_idx=rescue_end
         )
 
-        r_cand, r_conf, r_type = evaluate_candidate_windows(
-            sentence, rescue_windows, transcript_words,
-            max_pause_seconds, pause_weight, tie_threshold,
-            phonetic_threshold, phonetic_top_candidates
+        r_cand, r_conf = evaluate_candidate_windows_context_aware(
+            sentence, idx, all_sentences, rescue_windows, transcript_words,
+            max_pause_seconds, pause_weight, tie_threshold, debug=debug_alignment
         )
 
         if r_cand and r_conf >= min_confidence:
@@ -990,7 +998,6 @@ def align_script(
                 "confidence": round(r_conf, 2),
                 "confidence_level": calibrate_confidence_level(r_conf),
                 "matched": True,
-                "match_type": r_type,
                 "matched_text": r_matched_text,
                 "start_idx": rs_idx,
                 "end_idx": re_idx
@@ -1033,7 +1040,7 @@ def align_script(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with ASR Normalization Layer")
+    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with Context-Aware Scoring")
     parser.add_argument("script_file", help="Path to ground-truth script text file")
     parser.add_argument("media_or_json_file", help="Path to video/audio file or transcript JSON file")
     parser.add_argument("--min-confidence", type=float, default=70.0, help="Minimum normal confidence threshold (default: 70.0)")

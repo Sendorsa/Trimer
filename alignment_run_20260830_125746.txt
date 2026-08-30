@@ -1,1174 +1,0 @@
-============================================================
-BUMBLEBEE ALIGNMENT RUN LOG
-Start Time: 2026-08-30 12:57:46
-Log File:   alignment_run_20260830_125746.txt
-============================================================
-
-[1/2] Loading Whisper model ('base')...
-[2/2] Transcribing '/Users/athish/Downloads/50 mins assignement .mp4'...
-Detected language: English
-  0%|          | 0/304029 [00:00<?, ?frames/s]  1%|          | 2478/304029 [00:01<02:31, 1985.38frames/s]  2%|1         | 4950/304029 [00:02<02:15, 2199.33frames/s]  2%|2         | 7492/304029 [00:02<01:31, 3251.53frames/s]  3%|3         | 10490/304029 [00:03<01:25, 3444.88frames/s]  4%|4         | 12996/304029 [00:03<01:11, 4099.01frames/s]  5%|5         | 15642/304029 [00:04<01:02, 4611.95frames/s]  6%|6         | 18272/304029 [00:04<00:55, 5179.92frames/s]  7%|6         | 20798/304029 [00:04<00:49, 5760.78frames/s]  8%|7         | 23798/304029 [00:05<00:40, 6985.56frames/s]  8%|8         | 24920/304029 [00:07<02:07, 2186.03frames/s]  9%|9         | 27638/304029 [00:07<01:28, 3136.10frames/s] 10%|9         | 29302/304029 [00:08<01:14, 3670.91frames/s] 10%|#         | 31470/304029 [00:08<01:00, 4492.85frames/s] 11%|#         | 33084/304029 [00:08<00:55, 4863.02frames/s] 12%|#1        | 35056/304029 [00:08<00:45, 5856.38frames/s] 12%|#2        | 37104/304029 [00:08<00:41, 6465.28frames/s] 13%|#3        | 39842/304029 [00:09<00:38, 6777.21frames/s] 14%|#4        | 42702/304029 [00:09<00:39, 6635.61frames/s] 15%|#4        | 44450/304029 [00:10<00:41, 6264.72frames/s] 15%|#5        | 46316/304029 [00:10<00:38, 6763.57frames/s] 16%|#5        | 47724/304029 [00:10<00:40, 6307.45frames/s] 16%|#6        | 50136/304029 [00:10<00:36, 6982.16frames/s] 17%|#7        | 52646/304029 [00:11<00:35, 7014.53frames/s] 18%|#8        | 55194/304029 [00:11<00:37, 6670.89frames/s] 19%|#8        | 56906/304029 [00:11<00:38, 6392.57frames/s] 20%|#9        | 59710/304029 [00:12<00:34, 7064.61frames/s] 21%|##        | 62492/304029 [00:12<00:33, 7297.06frames/s] 22%|##1       | 65476/304029 [00:13<00:33, 7215.20frames/s] 22%|##2       | 68312/304029 [00:13<00:34, 6836.07frames/s] 23%|##2       | 69690/304029 [00:13<00:35, 6673.85frames/s] 24%|##3       | 71612/304029 [00:13<00:32, 7124.12frames/s] 24%|##4       | 73566/304029 [00:14<00:48, 4788.13frames/s] 25%|##5       | 76030/304029 [00:15<00:46, 4869.25frames/s] 26%|##5       | 78492/304029 [00:15<00:43, 5129.98frames/s] 26%|##6       | 80510/304029 [00:15<00:38, 5773.72frames/s] 27%|##7       | 83220/304029 [00:16<00:31, 6944.32frames/s] 28%|##8       | 85500/304029 [00:16<00:32, 6681.82frames/s] 29%|##9       | 89226/304029 [00:16<00:28, 7544.14frames/s] 30%|###       | 91486/304029 [00:17<00:24, 8555.98frames/s] 31%|###       | 94076/304029 [00:17<00:24, 8400.34frames/s] 32%|###1      | 96450/304029 [00:17<00:27, 7475.52frames/s] 32%|###2      | 97804/304029 [00:17<00:29, 7038.57frames/s] 33%|###2      | 99062/304029 [00:18<00:29, 6851.43frames/s] 33%|###3      | 101062/304029 [00:18<00:26, 7748.20frames/s] 34%|###3      | 103216/304029 [00:18<00:26, 7624.25frames/s] 34%|###4      | 104712/304029 [00:21<01:46, 1866.46frames/s] 35%|###5      | 107398/304029 [00:21<01:10, 2778.99frames/s] 36%|###5      | 108388/304029 [00:21<01:04, 3020.27frames/s] 36%|###5      | 109250/304029 [00:21<01:00, 3210.52frames/s] 37%|###6      | 112246/304029 [00:22<00:37, 5095.96frames/s] 37%|###7      | 113970/304029 [00:22<00:39, 4850.83frames/s] 38%|###8      | 115988/304029 [00:22<00:35, 5264.19frames/s] 39%|###8      | 117502/304029 [00:23<00:39, 4731.72frames/s] 40%|###9      | 120500/304029 [00:23<00:32, 5643.65frames/s] 40%|####      | 122370/304029 [00:23<00:29, 6238.57frames/s] 41%|####1     | 125706/304029 [00:24<00:25, 7126.70frames/s] 42%|####1     | 126982/304029 [00:24<00:25, 7071.32frames/s] 43%|####2     | 129982/304029 [00:24<00:19, 9048.07frames/s] 43%|####3     | 131658/304029 [00:24<00:19, 9015.41frames/s] 44%|####4     | 134654/304029 [00:24<00:15, 10807.87frames/s] 45%|####5     | 137652/304029 [00:25<00:13, 12203.50frames/s] 46%|####6     | 140306/304029 [00:25<00:16, 9965.65frames/s]  47%|####7     | 143198/304029 [00:25<00:14, 11245.38frames/s] 48%|####7     | 145198/304029 [00:25<00:14, 10994.99frames/s] 49%|####8     | 148196/304029 [00:26<00:12, 12268.44frames/s] 49%|####9     | 149706/304029 [00:26<00:17, 8740.58frames/s]  50%|#####     | 152324/304029 [00:26<00:14, 10113.82frames/s] 51%|#####     | 153760/304029 [00:27<00:21, 7118.98frames/s]  52%|#####1    | 156832/304029 [00:27<00:19, 7478.23frames/s] 53%|#####2    | 159672/304029 [00:27<00:18, 7643.79frames/s] 53%|#####3    | 162272/304029 [00:27<00:15, 8958.81frames/s] 54%|#####4    | 165272/304029 [00:28<00:12, 10675.18frames/s] 55%|#####5    | 168272/304029 [00:28<00:11, 12206.15frames/s] 56%|#####6    | 171272/304029 [00:28<00:09, 13491.14frames/s] 57%|#####6    | 173254/304029 [00:28<00:10, 12926.59frames/s] 58%|#####7    | 175552/304029 [00:28<00:09, 12980.48frames/s] 59%|#####8    | 178904/304029 [00:29<00:10, 11473.96frames/s] 60%|#####9    | 181904/304029 [00:29<00:09, 12874.21frames/s] 60%|######    | 183904/304029 [00:29<00:09, 12456.72frames/s] 62%|######1   | 187500/304029 [00:29<00:09, 11697.73frames/s] 62%|######2   | 189798/304029 [00:30<00:13, 8208.73frames/s]  63%|######3   | 192794/304029 [00:30<00:11, 9873.52frames/s] 64%|######4   | 195172/304029 [00:30<00:12, 8811.43frames/s] 65%|######4   | 197346/304029 [00:31<00:11, 9296.26frames/s] 65%|######5   | 198970/304029 [00:31<00:11, 9247.93frames/s] 66%|######5   | 200628/304029 [00:31<00:11, 9253.38frames/s] 67%|######6   | 203628/304029 [00:31<00:08, 11250.46frames/s] 68%|######7   | 206676/304029 [00:32<00:09, 10008.41frames/s] 68%|######8   | 207906/304029 [00:32<00:10, 9307.22frames/s]  69%|######9   | 209906/304029 [00:32<00:09, 9577.01frames/s] 70%|#######   | 212890/304029 [00:32<00:07, 11456.71frames/s] 70%|#######   | 214104/304029 [00:32<00:08, 10266.88frames/s] 72%|#######1  | 218036/304029 [00:33<00:08, 10722.45frames/s] 73%|#######2  | 221034/304029 [00:33<00:06, 12187.60frames/s] 73%|#######3  | 223106/304029 [00:33<00:08, 9694.80frames/s]  74%|#######4  | 225990/304029 [00:33<00:08, 9162.85frames/s] 76%|#######5  | 229876/304029 [00:34<00:07, 9832.89frames/s] 76%|#######6  | 232276/304029 [00:34<00:06, 10606.52frames/s] 77%|#######7  | 234364/304029 [00:34<00:06, 10896.81frames/s] 78%|#######7  | 236364/304029 [00:34<00:06, 11003.77frames/s] 79%|#######8  | 239358/304029 [00:35<00:05, 12604.89frames/s] 79%|#######9  | 241358/304029 [00:35<00:05, 12286.41frames/s] 80%|#######9  | 242836/304029 [00:35<00:06, 8809.20frames/s]  80%|########  | 244384/304029 [00:35<00:06, 8858.01frames/s] 81%|########1 | 247382/304029 [00:35<00:05, 10988.71frames/s] 82%|########2 | 250184/304029 [00:36<00:06, 8065.35frames/s]  83%|########3 | 253456/304029 [00:36<00:05, 8483.41frames/s] 84%|########4 | 256084/304029 [00:37<00:06, 7045.70frames/s] 85%|########4 | 258142/304029 [00:37<00:05, 7838.79frames/s] 86%|########5 | 261216/304029 [00:37<00:05, 8142.81frames/s] 87%|########6 | 263206/304029 [00:37<00:04, 8718.60frames/s] 88%|########7 | 266204/304029 [00:38<00:03, 10502.76frames/s] 88%|########8 | 268204/304029 [00:38<00:03, 10741.56frames/s] 89%|########9 | 271202/304029 [00:38<00:02, 12344.87frames/s] 90%|########9 | 272946/304029 [00:38<00:03, 9283.48frames/s]  91%|######### | 275938/304029 [00:39<00:02, 11048.96frames/s] 92%|#########1| 278924/304029 [00:39<00:01, 12553.63frames/s] 92%|#########2| 280970/304029 [00:39<00:01, 12358.67frames/s] 93%|#########3| 282970/304029 [00:39<00:01, 12113.07frames/s] 94%|#########4| 286164/304029 [00:39<00:01, 10841.22frames/s] 95%|#########4| 287626/304029 [00:40<00:01, 10229.69frames/s] 95%|#########5| 289264/304029 [00:40<00:01, 9986.16frames/s]  96%|#########6| 292262/304029 [00:40<00:00, 11864.11frames/s] 97%|#########6| 293620/304029 [00:40<00:00, 10755.15frames/s] 98%|#########7| 296614/304029 [00:40<00:00, 12527.05frames/s] 98%|#########8| 298614/304029 [00:40<00:00, 12223.89frames/s] 99%|#########8| 300034/304029 [00:41<00:00, 11009.39frames/s] 99%|#########9| 301029/304029 [00:41<00:00, 7287.15frames/s] 
-Extracting word timestamps:   0%|          | 0/298 [00:00<?, ?segment/s]Extracting word timestamps: 100%|##########| 298/298 [00:00<00:00, 94034.20segment/s]
-Aligning script sentences:   0%|          | 0/146 [00:00<?, ?sentence/s]Aligning script sentences:   1%|1         | 2/146 [00:00<00:09, 14.51sentence/s]Aligning script sentences:   3%|2         | 4/146 [00:00<00:13, 10.71sentence/s]Aligning script sentences:   4%|4         | 6/146 [00:01<00:41,  3.41sentence/s]Aligning script sentences:   5%|5         | 8/146 [00:01<00:28,  4.84sentence/s]Aligning script sentences:   8%|7         | 11/146 [00:01<00:22,  6.00sentence/s]Aligning script sentences:  10%|9         | 14/146 [00:02<00:15,  8.77sentence/s]Aligning script sentences:  13%|#3        | 19/146 [00:02<00:08, 14.25sentence/s]Aligning script sentences:  17%|#7        | 25/146 [00:02<00:05, 21.38sentence/s]Aligning script sentences:  20%|#9        | 29/146 [00:02<00:04, 23.98sentence/s]Aligning script sentences:  23%|##2       | 33/146 [00:02<00:05, 21.96sentence/s]Aligning script sentences:  27%|##6       | 39/146 [00:02<00:04, 26.71sentence/s]Aligning script sentences:  32%|###1      | 46/146 [00:02<00:02, 34.10sentence/s]Aligning script sentences:  35%|###4      | 51/146 [00:03<00:02, 34.54sentence/s]Aligning script sentences:  38%|###8      | 56/146 [00:03<00:02, 37.71sentence/s]Aligning script sentences:  42%|####1     | 61/146 [00:03<00:02, 33.86sentence/s]Aligning script sentences:  45%|####4     | 65/146 [00:03<00:03, 24.62sentence/s]Aligning script sentences:  47%|####7     | 69/146 [00:03<00:03, 21.83sentence/s]Aligning script sentences:  49%|####9     | 72/146 [00:03<00:03, 21.58sentence/s]Aligning script sentences:  51%|#####1    | 75/146 [00:04<00:03, 19.03sentence/s]Aligning script sentences:  53%|#####3    | 78/146 [00:04<00:03, 20.19sentence/s]Aligning script sentences:  55%|#####5    | 81/146 [00:04<00:03, 21.13sentence/s]Aligning script sentences:  58%|#####7    | 84/146 [00:04<00:02, 21.95sentence/s]Aligning script sentences:  60%|######    | 88/146 [00:04<00:02, 25.72sentence/s]Aligning script sentences:  64%|######4   | 94/146 [00:04<00:01, 33.36sentence/s]Aligning script sentences:  68%|######7   | 99/146 [00:04<00:01, 36.16sentence/s]Aligning script sentences:  71%|#######   | 103/146 [00:05<00:01, 29.83sentence/s]Aligning script sentences:  76%|#######6  | 111/146 [00:05<00:00, 39.80sentence/s]Aligning script sentences:  82%|########1 | 119/146 [00:05<00:00, 49.10sentence/s]Aligning script sentences:  87%|########6 | 127/146 [00:05<00:00, 55.31sentence/s]Aligning script sentences:  91%|#########1| 133/146 [00:05<00:00, 52.45sentence/s]Aligning script sentences:  95%|#########5| 139/146 [00:05<00:00, 46.98sentence/s]Aligning script sentences:  99%|#########8| 144/146 [00:05<00:00, 42.21sentence/s]Aligning script sentences: 100%|##########| 146/146 [00:05<00:00, 24.63sentence/s]
-[
-  {
-    "sentence": "Good morning everyone.",
-    "start": "00:00:32.720",
-    "end": "00:00:36.420",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Good morning, everyone.",
-    "start_idx": 13,
-    "end_idx": 15
-  },
-  {
-    "sentence": "Today I am going to present a topic that has become extremely important in modern biological and computational research: **Data Repositories and Public Biological Databases**.",
-    "start": "00:00:36.680",
-    "end": "00:00:54.320",
-    "confidence": 86.88,
-    "confidence_level": "MEDIUM",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Today I'm going to present a topic that has been extremely important in modern biology and computational research. Data, respect. What is this? How do I pronounce it? Okay. Research. Data repository. And public biological databases.",
-    "start_idx": 16,
-    "end_idx": 51
-  },
-  {
-    "sentence": "In today's world, enormous amounts of data are generated every day through scientific experiments, medical research, biodiversity surveys, agricultural studies, and artificial intelligence applications.",
-    "start": "00:01:46.160",
-    "end": "00:01:59.160",
-    "confidence": 97.28,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "In today's world, enormous amounts of data are generated every day through scientific experiments. Medical to search biodiversity survey, agriculture studies and artificial intelligent applications.",
-    "start_idx": 83,
-    "end_idx": 107
-  },
-  {
-    "sentence": "Managing and sharing this data efficiently is essential for scientific progress.",
-    "start": "00:01:59.900",
-    "end": "00:02:04.420",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Managing and sharing this data efficiently is essential for scientific progress.",
-    "start_idx": 108,
-    "end_idx": 118
-  },
-  {
-    "sentence": "This is where data repositories play a crucial role.",
-    "start": "00:02:16.400",
-    "end": "00:02:19.700",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "This is where data repositories play a crucial role.",
-    "start_idx": 135,
-    "end_idx": 143
-  },
-  {
-    "sentence": "In this presentation, I will discuss the meaning of data repositories, public and private datasets, the importance of public datasets, popular public dataset repositories, dataset licensing and usage rights, and finally some important biological repositories including NCBI, UniProt, GBIF, FAO, and Kaggle.",
-    "start": "00:02:20.540",
-    "end": "00:02:36.020",
-    "confidence": 75.88,
-    "confidence_level": "MEDIUM",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "this presentation, I will discuss the meaning of data repositories, public and private data sets. In importance of public data sets. Popular public data set repositories, data sets, licensing. And usage of",
-    "start_idx": 145,
-    "end_idx": 176
-  },
-  {
-    "sentence": "--- A data repository is a centralized digital location where datasets are stored, organized, maintained, and shared.",
-    "start": "00:06:03.700",
-    "end": "00:06:11.040",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "A data repository is a centralized digital location where data sets are stored, organized, maintained and shared.",
-    "start_idx": 332,
-    "end_idx": 348
-  },
-  {
-    "sentence": "Researchers, organizations, and institutions use repositories to preserve valuable data and make it available for future use.",
-    "start": "00:06:11.040",
-    "end": "00:06:20.820",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Researchers, organizations and institutions use repository to preserve valuable data and make it available for future use.",
-    "start_idx": 349,
-    "end_idx": 365
-  },
-  {
-    "sentence": "Think of a data repository as a digital library.",
-    "start": "00:06:22.120",
-    "end": "00:06:25.480",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Think of a data repository as a digital library",
-    "start_idx": 366,
-    "end_idx": 374
-  },
-  {
-    "sentence": "Instead of storing books, it stores datasets.",
-    "start": "00:06:25.480",
-    "end": "00:06:28.820",
-    "confidence": 98.46,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "instead of storing books, it stores data sets.",
-    "start_idx": 375,
-    "end_idx": 382
-  },
-  {
-    "sentence": "These datasets can contain information about genes, proteins, species distributions, climate conditions, agricultural production, or many other types of scientific information.",
-    "start": "00:06:29.280",
-    "end": "00:06:41.540",
-    "confidence": 96.36,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "These data sets can contain information about genes, proteins, PC distribution, climate conditions, agriculture production, or many other type of scientific information.",
-    "start_idx": 383,
-    "end_idx": 404
-  },
-  {
-    "sentence": "Data repositories help researchers access reliable data quickly.",
-    "start": "00:06:42.180",
-    "end": "00:06:46.260",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Data repositories help researchers access reliable data quickly.",
-    "start_idx": 405,
-    "end_idx": 412
-  },
-  {
-    "sentence": "They also ensure that valuable scientific information is not lost over time.",
-    "start": "00:06:46.820",
-    "end": "00:06:51.600",
-    "confidence": 99.31,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "They also ensure that variable scientific information is not lost over time.",
-    "start_idx": 413,
-    "end_idx": 424
-  },
-  {
-    "sentence": "--- Now let us understand what a dataset is.",
-    "start": "00:06:52.320",
-    "end": "00:06:54.960",
-    "confidence": 98.31,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Now let us understand what a data set is.",
-    "start_idx": 425,
-    "end_idx": 433
-  },
-  {
-    "sentence": "A dataset is a collection of related data organized in a structured format.",
-    "start": "00:06:55.400",
-    "end": "00:07:00.520",
-    "confidence": 97.2,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "A data set is a collection of related data organized in a structural format.",
-    "start_idx": 434,
-    "end_idx": 447
-  },
-  {
-    "sentence": "Datasets can be stored in spreadsheets, databases, or other digital formats.",
-    "start": "00:07:01.680",
-    "end": "00:07:07.020",
-    "confidence": 99.01,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Data sets can be stored in spreadsheets, databases or other digital formats.",
-    "start_idx": 448,
-    "end_idx": 459
-  },
-  {
-    "sentence": "For example, a dataset may contain DNA sequences from thousands of organisms.",
-    "start": "00:07:07.020",
-    "end": "00:07:12.740",
-    "confidence": 98.11,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "For example, a data set may contain DNA sequence from thousands of organisms.",
-    "start_idx": 460,
-    "end_idx": 472
-  },
-  {
-    "sentence": "Another dataset may contain records of bird species observed in different countries.",
-    "start": "00:07:13.280",
-    "end": "00:07:18.520",
-    "confidence": 96.43,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Another data set may contain record of birth species observed in different countries.",
-    "start_idx": 473,
-    "end_idx": 485
-  },
-  {
-    "sentence": "A medical dataset might include patient information, disease symptoms, and treatment outcome    s.",
-    "start": "00:07:18.980",
-    "end": "00:07:24.500",
-    "confidence": 98.39,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "A medical data set might include patient information, disease symptoms and treatment outcomes.",
-    "start_idx": 486,
-    "end_idx": 498
-  },
-  {
-    "sentence": "Datasets usually consist of observations, variables, and metadata.",
-    "start": "00:08:24.380",
-    "end": "00:08:29.340",
-    "confidence": 96.39,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Data sets usually consist of observations variables and meta.",
-    "start_idx": 559,
-    "end_idx": 567
-  },
-  {
-    "sentence": "Observations are the individual records.",
-    "start": "00:08:37.260",
-    "end": "00:08:39.400",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Observations are the individual records.",
-    "start_idx": 577,
-    "end_idx": 581
-  },
-  {
-    "sentence": "Variables describe the characteristics being measured.",
-    "start": "00:08:42.520",
-    "end": "00:08:45.200",
-    "confidence": 95.08,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Variables describe characteristic being measured",
-    "start_idx": 584,
-    "end_idx": 588
-  },
-  {
-    "sentence": "Metadata provides information about how the data was collected and organized.",
-    "start": "00:09:44.900",
-    "end": "00:09:49.580",
-    "confidence": 96.91,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Meta data provides information about how data was collected and organized.",
-    "start_idx": 657,
-    "end_idx": 667
-  },
-  {
-    "sentence": "Datasets form the foundation of modern scientific research and data analysis.",
-    "start": "00:10:09.100",
-    "end": "00:10:13.800",
-    "confidence": 99.01,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Data sets from the foundation of modern scientific research and data analysis.",
-    "start_idx": 692,
-    "end_idx": 703
-  },
-  {
-    "sentence": "--- Now let us discuss public datasets.",
-    "start": "00:10:16.200",
-    "end": "00:10:18.740",
-    "confidence": 97.87,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Now let us discuss public data sets.",
-    "start_idx": 704,
-    "end_idx": 710
-  },
-  {
-    "sentence": "Public datasets are datasets that are freely available for anyone to access, download, and use.",
-    "start": "00:10:18.940",
-    "end": "00:10:24.920",
-    "confidence": 98.41,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Public data sets are data sets that are freely available for anyone to access download and use.",
-    "start_idx": 711,
-    "end_idx": 727
-  },
-  {
-    "sentence": "These datasets are usually shared by governments, universities, research institutions, or organizations that support open science.",
-    "start": "00:10:24.920",
-    "end": "00:10:34.360",
-    "confidence": 95.65,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "These data sets are usually shared by governments, universities, research institutes or organizations that support open sets.",
-    "start_idx": 728,
-    "end_idx": 744
-  },
-  {
-    "sentence": "Public datasets are important because they allow researchers worldwide to work with the same information.",
-    "start": "00:10:35.200",
-    "end": "00:10:41.180",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Public data sets are important because they allow researchers worldwide to work with the same information.",
-    "start_idx": 745,
-    "end_idx": 760
-  },
-  {
-    "sentence": "This promotes transparency, collaboration, and innovation.",
-    "start": "00:10:41.780",
-    "end": "00:10:45.020",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "This promotes transparency, collaboration and innovation.",
-    "start_idx": 761,
-    "end_idx": 766
-  },
-  {
-    "sentence": "Examples of public datasets include genome databases, biodiversity records, climate data, and public health statistics.",
-    "start": "00:10:45.720",
-    "end": "00:10:54.760",
-    "confidence": 96.86,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Example of public data sets includes genome data basis, diversity records, climate data and public health statistics.",
-    "start_idx": 767,
-    "end_idx": 783
-  },
-  {
-    "sentence": "Students also benefit greatly from public datasets because they can learn data analysis skills without needing to collect large amounts of data themselves.",
-    "start": "00:10:56.220",
-    "end": "00:11:06.040",
-    "confidence": 99.99,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "students also benefit greatly from public data sets because they can learn data analysis skills without needing to collect large amount of data themselves.",
-    "start_idx": 786,
-    "end_idx": 809
-  },
-  {
-    "sentence": "--- In contrast, we have private datasets.",
-    "start": "00:11:06.920",
-    "end": "00:11:09.580",
-    "confidence": 98.04,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "In contrast, we have private data sets.",
-    "start_idx": 810,
-    "end_idx": 816
-  },
-  {
-    "sentence": "Private datasets are datasets that have restricted access.",
-    "start": "00:11:09.860",
-    "end": "00:11:13.120",
-    "confidence": 97.44,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Private data sets are data sets that have restricted access.",
-    "start_idx": 817,
-    "end_idx": 826
-  },
-  {
-    "sentence": "These datasets are usually owned by organizations, companies, hospitals, or research groups.",
-    "start": "00:11:13.360",
-    "end": "00:11:18.620",
-    "confidence": 98.21,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "The data sets are usually owned by organizations, companies, hospitals or research groups.",
-    "start_idx": 827,
-    "end_idx": 839
-  },
-  {
-    "sentence": "Access to private datasets may require permission, payment, or legal agreements.",
-    "start": "00:11:19.180",
-    "end": "00:11:23.120",
-    "confidence": 96.97,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Access to private data sets may require permissions, payment or legal agreement.",
-    "start_idx": 840,
-    "end_idx": 851
-  },
-  {
-    "sentence": "Examples include hospital patient records, confidential company data, pharmaceutical research data, and proprietary business information.",
-    "start": "00:11:26.440",
-    "end": "00:11:36.900",
-    "confidence": 98.27,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Example includes hospital patients records, confidential company data, pharmaceutical research data and proprietary business information.",
-    "start_idx": 852,
-    "end_idx": 866
-  },
-  {
-    "sentence": "Private datasets often contain sensitive information.",
-    "start": "00:13:54.920",
-    "end": "00:13:59.060",
-    "confidence": 98.55,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "private data sets, often contain sensitive information.",
-    "start_idx": 1000,
-    "end_idx": 1006
-  },
-  {
-    "sentence": "Therefore, privacy protection and security measures are extremely important.",
-    "start": "00:13:59.520",
-    "end": "00:14:03.340",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Therefore, privacy protection and security measures are extremely important.",
-    "start_idx": 1007,
-    "end_idx": 1015
-  },
-  {
-    "sentence": "Although private datasets can be highly valuable, they are generally more difficult to obtain than public datasets.",
-    "start": "00:14:03.780",
-    "end": "00:14:10.620",
-    "confidence": 98.57,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Although private data sets can be highly valuable, they are generally more difficult to obtain than public data sets.",
-    "start_idx": 1016,
-    "end_idx": 1034
-  },
-  {
-    "sentence": "--- Let us compare public and private datasets.",
-    "start": "00:15:26.980",
-    "end": "00:15:30.140",
-    "confidence": 98.36,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Let us compare public and private data sets.",
-    "start_idx": 1064,
-    "end_idx": 1071
-  },
-  {
-    "sentence": "Public datasets are open and accessible to everyone.",
-    "start": "00:15:30.400",
-    "end": "00:15:33.620",
-    "confidence": 98.63,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Public data sets are open and accessible to everyone.",
-    "start_idx": 1072,
-    "end_idx": 1080
-  },
-  {
-    "sentence": "They are often free and encourage scientific collaboration.",
-    "start": "00:15:33.820",
-    "end": "00:15:36.740",
-    "confidence": 91.43,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "They are often free, encouraged, scientific collaborations.",
-    "start_idx": 1081,
-    "end_idx": 1087
-  },
-  {
-    "sentence": "Private datasets, on the other hand, have restricted access.",
-    "start": "00:15:37.720",
-    "end": "00:15:40.760",
-    "confidence": 98.76,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Private data sets on the other hand have restricted access.",
-    "start_idx": 1088,
-    "end_idx": 1097
-  },
-  {
-    "sentence": "They may contain confidential information and require authorization before use.",
-    "start": "00:15:40.760",
-    "end": "00:15:45.740",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "They may contain confidential information and require authorization before use.",
-    "start_idx": 1098,
-    "end_idx": 1107
-  },
-  {
-    "sentence": "Public datasets are useful for education, research, and machine learning applications.",
-    "start": "00:15:46.620",
-    "end": "00:15:51.460",
-    "confidence": 92.59,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Public data sets are more useful for education, research, machine learning applications.",
-    "start_idx": 1108,
-    "end_idx": 1119
-  },
-  {
-    "sentence": "Private datasets are commonly used within organizations for internal decision-making and specialized research.",
-    "start": "00:15:52.080",
-    "end": "00:15:57.900",
-    "confidence": 95.71,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Private data sets are commonly used in organization for internal decision making and specialized research.",
-    "start_idx": 1120,
-    "end_idx": 1134
-  },
-  {
-    "sentence": "Both types of datasets are important, but their usage depends on the purpose and privacy requirements of the data.",
-    "start": "00:15:58.540",
-    "end": "00:16:04.500",
-    "confidence": 96.77,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Both types of data sets are important, but their usage depends on their purpose and privacy requirement for the data.",
-    "start_idx": 1135,
-    "end_idx": 1154
-  },
-  {
-    "sentence": "--- Now let us examine why public datasets are so important.",
-    "start": "00:16:26.660",
-    "end": "00:16:30.620",
-    "confidence": 99.3,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Now, let us examine why public data sets are so important.",
-    "start_idx": 1172,
-    "end_idx": 1182
-  },
-  {
-    "sentence": "One major benefit is reproducibility.",
-    "start": "00:16:54.720",
-    "end": "00:16:58.140",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "One major benefit is reproducibility.",
-    "start_idx": 1188,
-    "end_idx": 1192
-  },
-  {
-    "sentence": "Scientific findings become more trustworthy when other researchers can access the same data and verify the results.",
-    "start": "00:16:58.860",
-    "end": "00:17:05.040",
-    "confidence": 100.0,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "Scientific findings become more trustworthy when other researchers can access the same data and verify the result.",
-    "start_idx": 1193,
-    "end_idx": 1209
-  },
-  {
-    "sentence": "Public datasets also accelerate scientific discovery.",
-    "start": "00:17:05.980",
-    "end": "00:17:12.160",
-    "confidence": 97.14,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Public data sets also accelerate scientific discoveries.",
-    "start_idx": 1210,
-    "end_idx": 1216
-  },
-  {
-    "sentence": "Researchers do not need to spend months collecting data that already exists.",
-    "start": "00:17:49.140",
-    "end": "00:17:53.980",
-    "confidence": 99.01,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Researches do not need to spend months collecting data that already exists.",
-    "start_idx": 1229,
-    "end_idx": 1240
-  },
-  {
-    "sentence": "Another advantage is collaboration.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Scientists from different countries can work together using shared datasets.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Public datasets are also essential for machine learning and artificial intelligence.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "AI systems require large amounts of data for training and testing.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Finally, public datasets support education by giving students access to real-world data.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Public datasets have applications in many fields.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "In healthcare, they help researchers study diseases and develop treatments.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "In biotechnology, public genomic datasets help scientists understand genes and proteins.",
-    "start": "00:19:02.260",
-    "end": "00:19:11.640",
-    "confidence": 87.4,
-    "confidence_level": "MEDIUM",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "genomic data base, in biotechnology, public data sets help to understand gene and proteins.",
-    "start_idx": 1280,
-    "end_idx": 1293
-  },
-  {
-    "sentence": "In ecology and environmental science, datasets are used to monitor biodiversity and predict environmental changes.",
-    "start": "00:19:12.540",
-    "end": "00:19:19.880",
-    "confidence": 98.72,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "In ecology and environmental science, data sets are used to monitor biodiversity and predict environmental change.",
-    "start_idx": 1294,
-    "end_idx": 1309
-  },
-  {
-    "sentence": "In agriculture, datasets help improve crop production and food security.",
-    "start": "00:19:19.880",
-    "end": "00:19:25.560",
-    "confidence": 98.99,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "In agriculture, data sets help improve crop production and food security.",
-    "start_idx": 1310,
-    "end_idx": 1320
-  },
-  {
-    "sentence": "In artificial intelligence, public datasets are used to train machine learning models for image recognition, language processing, and predictive analytics.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Now let us move to some popular public dataset repositories.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "The first repository is Kaggle.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Kaggle is one of the world's most popular platforms for data science and machine learning.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "It provides thousands of public datasets covering numerous topics including biology, healthcare, agriculture, and environmental science.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Researchers and students can download datasets, perform analyses, and participate in competitions.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Kaggle also provides notebooks that allow users to analyze data directly within the platform.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Biological datasets on Kaggle include cancer datasets, COVID-19 datasets, genome-related datasets, and species classification datasets.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Because of its user-friendly interface, Kaggle is often the first platform students use when learning data science.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Another important platform is Hugging Face Datasets.",
-    "start": "00:24:16.020",
-    "end": "00:24:21.980",
-    "confidence": 98.63,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Another important platform is hugging phase data sets.",
-    "start_idx": 1416,
-    "end_idx": 1423
-  },
-  {
-    "sentence": "Hugging Face is widely known for artificial intelligence and machine learning applications.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "The platform hosts thousands of datasets related to language processing, image analysis, audio recognition, and scientific research.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Researchers use these datasets to train advanced AI models.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "The availability of high-quality datasets has contributed significantly to recent advances in artificial intelligence.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Next is the UCI Machine Learning Repository.",
-    "start": "00:24:21.980",
-    "end": "00:24:41.980",
-    "confidence": 96.3,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Next is UCI Machine Learning Repository.",
-    "start_idx": 1424,
-    "end_idx": 1429
-  },
-  {
-    "sentence": "The UCI Repository is one of the oldest and most respected dataset repositories in the world.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "It contains hundreds of datasets used for machine learning research and education.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "These datasets cover healthcare, biology, agriculture, engineering, and social sciences.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Many students encounter UCI datasets while learning statistics, data science, and machine learning.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "The repository is particularly valuable because the datasets are well-documented and widely used in academic research.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Another useful tool is Google Dataset Search.",
-    "start": "00:25:23.180",
-    "end": "00:25:27.060",
-    "confidence": 96.55,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Another useful tool is Google Data Set Research.",
-    "start_idx": 1444,
-    "end_idx": 1451
-  },
-  {
-    "sentence": "Google Dataset Search functions similarly to Google's web search engine, but it is designed specifically for datasets.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Instead of storing datasets directly, it helps users locate datasets hosted across the internet.",
-    "start": "00:25:53.240",
-    "end": "00:25:57.760",
-    "confidence": 70.05,
-    "confidence_level": "LOW",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "It helps users locate data sets posted across the internet.",
-    "start_idx": 1456,
-    "end_idx": 1465
-  },
-  {
-    "sentence": "Researchers can search for data related to biodiversity, genomics, climate science, healthcare, and many other topics.",
-    "start": "00:25:57.760",
-    "end": "00:26:07.600",
-    "confidence": 97.9,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "phonetic",
-    "matched_text": "Researchers can research for data related to biodiversity, genomic climate science, health care and many other topics.",
-    "start_idx": 1466,
-    "end_idx": 1482
-  },
-  {
-    "sentence": "This makes finding relevant datasets much faster and more efficient.",
-    "start": "00:26:07.600",
-    "end": "00:26:12.520",
-    "confidence": 99.41,
-    "confidence_level": "HIGH",
-    "matched": true,
-    "match_type": "normal",
-    "matched_text": "This makes finding relevant data sets much faster and more efficient.",
-    "start_idx": 1483,
-    "end_idx": 1493
-  },
-  {
-    "sentence": "--- Now let us discuss dataset licensing and usage rights.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Not all datasets can be used in the same way.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Dataset licensing determines what users are allowed to do with the data.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Licenses define whether a dataset can be copied, modified, redistributed, or used commercially.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Understanding licensing is essential because misuse of data may violate legal or ethical standards.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Researchers must always read the license information before using a dataset.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Several common licenses are used for datasets.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Creative Commons licenses are among the most popular.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "A CC BY license allows users to use the data as long as the original creator is credited.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "A CC BY-SA license requires users to share modified versions under the same license.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "A CC BY-NC license allows use only for non-commercial purposes.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Some datasets are released into the public domain, meaning anyone can use them without restrictions.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Others may have proprietary licenses that limit usage.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Ethical considerations are equally important.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Researchers must respect privacy and confidentiality when using data.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Human-related datasets should be collected with informed consent.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Sensitive information must be protected against unauthorized access.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Proper citation of data sources is necessary to acknowledge the efforts of data creators.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Responsible data use helps maintain trust in scientific research.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Now we will focus on public biological repositories.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "The first and perhaps most important repository is NCBI.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "NCBI stands for the National Center for Biotechnology Information.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "NCBI is one of the world's largest biological information resources.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "It provides access to databases such as GenBank, PubMed, and BLAST.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "GenBank stores DNA and RNA sequence information.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "PubMed contains millions of scientific publications related to medicine and biology.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "BLAST allows researchers to compare genetic sequences and identify similarities.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Biologists, biotechnologists, geneticists, and medical researchers use NCBI extensively.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- The next repository is UniProt.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "UniProt stands for Universal Protein Resource.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "It is one of the most comprehensive protein databases available today.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "UniProt contains information about protein sequences, structures, functions, and biological roles.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Researchers use UniProt to understand how proteins function in living organisms.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Protein information is essential for biotechnology, medicine, drug development, and molecular biology research.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "The database is continuously updated to ensure accuracy and reliability.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Another major repository is GBIF.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "GBIF stands for Global Biodiversity Information Facility.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "GBIF provides open-access biodiversity data from around the world.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "The database contains millions of records documenting species occurrences in different locations.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Researchers use GBIF to study species distribution, biodiversity patterns, conservation planning, and environmental change.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "For zoology and ecology students, GBIF is an extremely valuable resource because it provides real-world biodiversity information.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Next is FAO.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "FAO stands for the Food and Agriculture Organization of the United Nations.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "FAO maintains extensive databases related to agriculture, fisheries, forestry, food production, and food security.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "These datasets are used by governments, researchers, and policymakers.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "FAO data helps monitor global agricultural trends and supports efforts to address food shortages and environmental challenges.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "The organization plays a major role in promoting sustainable development worldwide.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- Finally, let us revisit Kaggle from a biological perspective.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Although Kaggle is not exclusively a biological repository, it hosts many biological and medical datasets.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Students can find datasets related to genetics, cancer research, disease prediction, biodiversity, agriculture, and environmental science.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Kaggle is particularly useful because it combines data access with analytical tools and educational resources.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "As a result, it serves as an excellent platform for learning data analysis and machine learning applications in biology.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "--- To conclude, data repositories are essential components of modern science.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "They provide secure storage, efficient sharing, and long-term preservation of valuable datasets.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Public datasets encourage transparency, collaboration, and innovation, while private datasets help protect sensitive information.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Repositories such as Kaggle, Hugging Face, UCI Machine Learning Repository, and Google Dataset Search make data more accessible.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Biological repositories including NCBI, UniProt, GBIF, and FAO provide critical resources that support research in biotechnology, zoology, ecology, medicine, and agriculture.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "As scientific data continues to grow, understanding how to access, evaluate, and responsibly use these repositories will become increasingly important for every researcher and student.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  },
-  {
-    "sentence": "Thank you for listening.",
-    "matched": false,
-    "rejection_reason": "BELOW_THRESHOLD"
-  }
-]
-
-[RUNTIME SUMMARY]
-Total Execution Time: 49.63 seconds

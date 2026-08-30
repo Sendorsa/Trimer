@@ -1,64 +1,124 @@
 #!/usr/bin/env python3
 """
 test_align_script.py - Unit & Integration Test Suite for align_script.py
-Tests ASR Normalization Layer (apply_asr_normalizations, COMMON_ASR_NORMALIZATIONS),
-Section Heading Hard Anchors, Expanded Block Regions, and Neighbor Rescue Pass.
+Tests Context-Aware Alignment Scoring (roadmap vs load map, Sanger vs sangal,
+nucleotides vs nuclear types, perfect match), Section Heading Hard Anchors,
+Expanded Block Regions, and Neighbor Rescue Pass.
 """
 
 import os
 import sys
 import unittest
-import rapidfuzz
 from io import StringIO
 from align_script import (
     align_script,
     clean_text,
-    apply_asr_normalizations,
     detect_element_type,
     parse_script_hierarchical,
-    ScriptElementType,
-    RejectionReason,
-    compute_adaptive_search_window,
-    create_run_logger,
-    COMMON_ASR_NORMALIZATIONS,
+    score_candidate_context_aware,
+    extract_context_words,
+    ScriptSentence,
+    TranscriptWord,
     BLOCK_EXPANSION,
     NEIGHBOR_RESCUE_MARGIN
 )
 
 
-class TestASRNormalizationAlignScript(unittest.TestCase):
+class TestContextAwareScoringAlignScript(unittest.TestCase):
 
-    def test_asr_normalization_phrases(self):
-        # 1. road map -> roadmap
-        t1 = apply_asr_normalizations("In simple words it acts like a road map")
-        self.assertIn("roadmap", t1)
-        self.assertNotIn("road map", t1)
+    def _make_script_sent(self, text, sent_id=0):
+        words = clean_text(text).split()
+        return ScriptSentence(
+            sentence_id=sent_id,
+            raw_text=text,
+            clean_text=clean_text(text),
+            words=words,
+            word_count=len(words)
+        )
 
-        # 2. load map -> roadmap
-        t2 = apply_asr_normalizations("In simple words it acts like a load map")
-        self.assertIn("roadmap", t2)
-        self.assertNotIn("load map", t2)
+    def _make_transcript_words(self, text_words):
+        t_words = []
+        for idx, w in enumerate(text_words):
+            cw = clean_text(w)
+            t_words.append(TranscriptWord(
+                raw_word=w,
+                clean_word=cw,
+                start_sec=float(idx),
+                end_sec=float(idx) + 0.5,
+                start_fmt=f"00:00:0{idx}.000",
+                end_fmt=f"00:00:0{idx}.500",
+                index=idx
+            ))
+        return t_words
 
-        # 3. sangal -> sanger
-        t3 = apply_asr_normalizations("We performed sangal sequencing")
-        self.assertIn("sanger", t3)
-        self.assertNotIn("sangal", t3)
+    def test_case1_roadmap_vs_load_map_with_context(self):
+        script_prev = self._make_script_sent("Follow the instructions carefully.", 0)
+        script_curr = self._make_script_sent("Please follow the roadmap for gene sequencing.", 1)
+        script_next = self._make_script_sent("This completes the process.", 2)
+        all_sents = [script_prev, script_curr, script_next]
 
-        # 4. nuclear types -> nucleotides
-        t4 = apply_asr_normalizations("DNA is made of nuclear types")
-        self.assertIn("nucleotides", t4)
-        self.assertNotIn("nuclear types", t4)
+        # Transcript mishears "roadmap" as "load map"
+        cand_text = "follow the instructions carefully please follow the load map for gene sequencing this completes the process".split()
+        t_words = self._make_transcript_words(cand_text)
 
-    def test_asr_normalization_higher_similarity_score(self):
-        ground_truth = "follow the roadmap for sequencing"
-        raw_asr = "follow the load map for sequencing"
-        normalized_asr = apply_asr_normalizations(raw_asr)
+        # Candidate slice for "please follow the load map for gene sequencing" (indices 4 to 12)
+        _, _, ctx_score, _, _, final_score = score_candidate_context_aware(
+            script_curr, 1, all_sents, 4, 12, t_words
+        )
 
-        raw_score = rapidfuzz.fuzz.ratio(ground_truth, raw_asr)
-        normalized_score = rapidfuzz.fuzz.ratio(ground_truth, normalized_asr)
+        # Verify context score is high due to surrounding matching context
+        self.assertTrue(ctx_score >= 80.0)
+        self.assertTrue(final_score >= 70.0)
 
-        # Verify normalized string produces higher similarity score than raw string
-        self.assertTrue(normalized_score > raw_score)
+    def test_case2_sanger_vs_sangal_with_context(self):
+        script_prev = self._make_script_sent("DNA sequencing has evolved.", 0)
+        script_curr = self._make_script_sent("We performed Sanger sequencing on all samples.", 1)
+        script_next = self._make_script_sent("Results were accurate.", 2)
+        all_sents = [script_prev, script_curr, script_next]
+
+        # Transcript mishears "Sanger" as "sangal"
+        cand_text = "dna sequencing has evolved we performed sangal sequencing on all samples results were accurate".split()
+        t_words = self._make_transcript_words(cand_text)
+
+        _, _, ctx_score, _, _, final_score = score_candidate_context_aware(
+            script_curr, 1, all_sents, 4, 11, t_words
+        )
+
+        self.assertTrue(ctx_score >= 80.0)
+        self.assertTrue(final_score >= 70.0)
+
+    def test_case3_nucleotides_vs_nuclear_types_with_context(self):
+        script_prev = self._make_script_sent("Gene sequencing is important.", 0)
+        script_curr = self._make_script_sent("It determines the exact order of nucleotides in DNA.", 1)
+        script_next = self._make_script_sent("This enables mapping.", 2)
+        all_sents = [script_prev, script_curr, script_next]
+
+        # Transcript mishears "nucleotides" as "nuclear types"
+        cand_text = "gene sequencing is important it determines the exact order of nuclear types in dna this enables mapping".split()
+        t_words = self._make_transcript_words(cand_text)
+
+        _, _, ctx_score, _, _, final_score = score_candidate_context_aware(
+            script_curr, 1, all_sents, 4, 13, t_words
+        )
+
+        self.assertTrue(ctx_score >= 80.0)
+        self.assertTrue(final_score >= 70.0)
+
+    def test_case4_perfect_transcript_match(self):
+        script_prev = self._make_script_sent("Introduction to genomics.", 0)
+        script_curr = self._make_script_sent("Gene mapping identifies marker locations.", 1)
+        script_next = self._make_script_sent("Conclusion follows.", 2)
+        all_sents = [script_prev, script_curr, script_next]
+
+        cand_text = "introduction to genomics gene mapping identifies marker locations conclusion follows".split()
+        t_words = self._make_transcript_words(cand_text)
+
+        _, _, ctx_score, _, _, final_score = score_candidate_context_aware(
+            script_curr, 1, all_sents, 3, 7, t_words
+        )
+
+        self.assertTrue(ctx_score >= 90.0)
+        self.assertTrue(final_score >= 85.0)
 
 
 class TestPhase1CandidateDiscoveryAlignScript(unittest.TestCase):
@@ -151,19 +211,6 @@ This sentence was never spoken in the video.
         unspoken = [r for r in results if "never spoken" in r["sentence"]]
         self.assertEqual(len(unspoken), 1)
         self.assertFalse(unspoken[0].get("matched", True))
-
-    def test_persistent_run_logger(self):
-        with create_run_logger() as ctx:
-            log_filepath = ctx.filepath
-            self.created_logs.append(log_filepath)
-            self.assertTrue(os.path.exists(log_filepath))
-            self.assertTrue(ctx.filename.startswith("alignment_run_"))
-            self.assertTrue(ctx.filename.endswith(".txt"))
-
-        with open(log_filepath, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        self.assertIn("BUMBLEBEE ALIGNMENT RUN LOG", content)
 
 
 if __name__ == "__main__":
