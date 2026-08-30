@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-align_script.py - Bumblebee Stage 2 Alignment Engine with Adaptive Localization & Diagnostics
+align_script.py - Bumblebee Stage 2 Alignment Engine with Section Anchors & Neighbor Rescue Pass
 
 Aligns noisy word-level transcripts produced by transcript.py with a ground-truth script file.
 
 Features:
-  1. Alignment Diagnostics & Rejection Logging (NO_CANDIDATES, BELOW_THRESHOLD, MONOTONIC_REJECTED, OUTSIDE_WINDOW, BLOCK_ALIGNMENT_FAILED)
-  2. Hierarchical Traceability Logging ([SECTION ALIGNMENT], [BLOCK ALIGNMENT], [SENTENCE ALIGNMENT])
-  3. Adaptive Search Windows (BASE_SEARCH_WINDOW=150 up to MAX_SEARCH_WINDOW=600)
-  4. 3-Tier Regional Fallback Search (Local -> Block -> Section)
-  5. Structural Block Recovery (groups Advantages:, Limitations:, Applications: into searchable blocks)
-  6. Alignment Failure Analytics Summary
-  7. Monotonic Chronological Alignment (prevents backward timestamp jumps)
-  8. 4-Part RapidFuzz Similarity Scoring (ratio, token_set_ratio, partial_ratio, coverage)
-  9. ASR Error Normalization Layer (extensible dictionary mapping)
+  1. Section Heading Hard Anchors (prevents section drift across large transcripts)
+  2. Block Region Expansion (+/- 150 words search region expansion for sentences)
+  3. Neighbor-Based Rescue Pass (+/- 20 words local search between prev/next matched bounds)
+  4. Debug Instrumentation Logging (Block Alignment, Expanded Regions, Rejections, Rescue Pass)
+  5. Phonetic Rescue Fallback Layer (Metaphone/Soundex + RapidFuzz top-N evaluation)
+  6. Monotonic Chronological Alignment (prevents backward timestamp jumps)
+  7. 4-Part RapidFuzz Similarity Scoring (ratio, token_set_ratio, partial_ratio, coverage)
+  8. ASR Error Normalization Layer (extensible dictionary mapping)
+  9. Alignment Failure Analytics Summary
  10. Calibrated Confidence Levels (HIGH, MEDIUM, LOW)
 """
 
@@ -25,7 +25,7 @@ import string
 import argparse
 import warnings
 from enum import Enum, auto
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional
 from collections import Counter
 
@@ -39,6 +39,11 @@ except ImportError:
     sys.exit(1)
 
 try:
+    import jellyfish
+except ImportError:
+    jellyfish = None
+
+try:
     from tqdm import tqdm
 except ImportError:
     tqdm = None
@@ -48,6 +53,8 @@ except ImportError:
 DEBUG_ALIGNMENT = True
 BASE_SEARCH_WINDOW = 150
 MAX_SEARCH_WINDOW = 600
+BLOCK_EXPANSION_MARGIN = 150
+NEIGHBOR_RESCUE_MARGIN = 20
 
 # Common ASR error replacements for domain speech
 COMMON_ASR_NORMALIZATIONS: Dict[str, str] = {
@@ -108,6 +115,8 @@ class ScriptBlock:
     sentences: List[ScriptSentence]
     start_idx: Optional[int] = None
     end_idx: Optional[int] = None
+    expanded_start_idx: Optional[int] = None
+    expanded_end_idx: Optional[int] = None
 
 
 @dataclass
@@ -118,6 +127,7 @@ class ScriptSection:
     blocks: List[ScriptBlock]
     start_idx: Optional[int] = None
     end_idx: Optional[int] = None
+    heading_anchor_idx: Optional[int] = None
 
 
 def parse_ffmpeg_timestamp(timestamp_str: str) -> float:
@@ -147,6 +157,28 @@ def clean_text(text: str, normalizations: Optional[Dict[str, str]] = None) -> st
             text_clean = text_clean.replace(err, fix)
 
     return text_clean
+
+
+def phonetic_normalize(text: str) -> str:
+    """
+    Converts sentence text into space-separated phonetic representation (Metaphone/Soundex).
+    Example:
+      'Sanger sequencing' -> 'SNJR SKNSNK'
+      'Sangal sequencing' -> 'SNKL SKNSNK'
+    """
+    clean_words = text.lower().split()
+    codes = []
+    for w in clean_words:
+        code = None
+        if jellyfish:
+            try:
+                code = jellyfish.metaphone(w)
+                if not code:
+                    code = jellyfish.soundex(w)
+            except Exception:
+                code = None
+        codes.append(code if code else w)
+    return " ".join(codes)
 
 
 def detect_element_type(line: str) -> ScriptElementType:
@@ -251,7 +283,7 @@ def parse_script_hierarchical(
         elem_type = detect_element_type(trimmed)
         words = trimmed.split()
 
-        # Structural Block Recovery: Merge short labels (< 3 words) like Advantages:, Limitations:, 1.
+        # Structural Merging: If short element (< 3 words), merge with next content
         if len(words) < 3 and elem_type in (ScriptElementType.NUMBERED_ITEM, ScriptElementType.SUBHEADING, ScriptElementType.STRUCTURAL):
             pending_prefix = (pending_prefix + " " + trimmed).strip()
             continue
@@ -481,9 +513,7 @@ def compute_adaptive_search_window(
     block_conf_low: bool,
     section_changed: bool
 ) -> int:
-    """
-    Dynamically expands search window from BASE_SEARCH_WINDOW (150) up to MAX_SEARCH_WINDOW (600).
-    """
+    """Dynamically expands search window from BASE_SEARCH_WINDOW (150) up to MAX_SEARCH_WINDOW (600)."""
     window = BASE_SEARCH_WINDOW
     if prev_unmatched:
         window += 150
@@ -504,6 +534,71 @@ def calibrate_confidence_level(confidence: float) -> str:
         return "LOW"
 
 
+def evaluate_candidate_windows(
+    sentence: ScriptSentence,
+    candidate_windows: List[Tuple[int, int]],
+    transcript_words: List[TranscriptWord],
+    max_pause_seconds: float = 1.5,
+    pause_weight: float = 5.0,
+    tie_threshold: float = 2.0,
+    phonetic_threshold: float = 85.0,
+    phonetic_top_candidates: int = 5
+) -> Tuple[Optional[Tuple], float, str, Optional[Tuple]]:
+    """
+    Evaluates candidate windows using 4-part scoring + retake policy + Phonetic Rescue fallback.
+    Returns: (best_candidate, confidence, match_type, candidate_details)
+    """
+    if not candidate_windows:
+        return None, 0.0, "unmatched", None
+
+    evaluated_candidates = []
+    for s_idx, e_idx in candidate_windows:
+        cand_slice = transcript_words[s_idx : e_idx + 1]
+        sim, cov, penalty, rank_score = score_candidate_advanced(
+            sentence, cand_slice, max_pause_seconds, pause_weight
+        )
+        evaluated_candidates.append((s_idx, e_idx, sim, cov, penalty, rank_score, cand_slice))
+
+    evaluated_candidates.sort(key=lambda c: c[5], reverse=True)
+    best_candidate = evaluated_candidates[0]
+    best_ranking_score = best_candidate[5]
+
+    for cand in evaluated_candidates[1:10]:
+        s_idx, rank_score = cand[0], cand[5]
+        score_diff = rank_score - best_ranking_score
+        if score_diff > tie_threshold:
+            best_ranking_score = rank_score
+            best_candidate = cand
+        elif abs(score_diff) <= tie_threshold:
+            if s_idx > best_candidate[0]:
+                best_ranking_score = rank_score
+                best_candidate = cand
+
+    normal_confidence = max(0.0, min(100.0, best_candidate[5]))
+    
+    # Try Phonetic Rescue Fallback if normal confidence < 70.0
+    top_n_candidates = evaluated_candidates[:phonetic_top_candidates]
+    phonetic_script = phonetic_normalize(sentence.clean_text)
+
+    best_phonetic_cand = None
+    best_phonetic_score = float('-inf')
+
+    for cand in top_n_candidates:
+        c_slice = cand[6]
+        cand_clean_text = " ".join([w.clean_word for w in c_slice if w.clean_word])
+        phonetic_cand = phonetic_normalize(cand_clean_text)
+        p_score = float(rapidfuzz.fuzz.ratio(phonetic_script, phonetic_cand))
+
+        if p_score > best_phonetic_score:
+            best_phonetic_score = p_score
+            best_phonetic_cand = cand
+
+    if best_phonetic_cand and best_phonetic_score >= phonetic_threshold and best_phonetic_score > normal_confidence:
+        return best_phonetic_cand, best_phonetic_score, "phonetic", best_candidate
+
+    return best_candidate, normal_confidence, "normal", best_candidate
+
+
 def align_script(
     transcript_tuples: list,
     script_path: str,
@@ -512,11 +607,14 @@ def align_script(
     tie_threshold: float = 2.0,
     min_confidence: float = 70.0,
     monotonic_overlap: int = 20,
+    phonetic_threshold: float = 85.0,
+    phonetic_top_candidates: int = 5,
     normalizations: Optional[Dict[str, str]] = None,
     debug_alignment: bool = DEBUG_ALIGNMENT
 ) -> List[dict]:
     """
-    Main Hierarchical Alignment Function with Adaptive Windows, Fallback Regional Search, and Diagnostics.
+    Main Hierarchical Alignment Function with Section Heading Anchors, Block Region Expansion,
+    Neighbor Rescue Pass, and Diagnostics.
     """
     script_text = script_path
     if isinstance(script_path, str) and os.path.exists(script_path):
@@ -530,31 +628,39 @@ def align_script(
     # Stage 2: Parse Script into Sections -> Blocks -> Sentences
     sections = parse_script_hierarchical(script_text, normalizations)
 
-    # Coarse Section Localization pass for traceability logging
+    # IMPROVEMENT 2: Section Heading Hard Anchors & Coarse Section/Block Localization
     for sec in sections:
         sec_words = []
         if sec.heading_sentence:
             sec_words.extend(sec.heading_sentence.words)
+            # Find hard anchor index for section heading
+            h_anchors = [idx for w in sec.heading_sentence.words if w in inverted_index for idx in inverted_index[w]]
+            if h_anchors:
+                sec.heading_anchor_idx = min(h_anchors)
+
         for b in sec.blocks:
             sec_words.extend(b.clean_text.split())
-        
-        # Find rough region bounds for section using inverted index
+
         sec_anchors = [idx for w in set(sec_words) if w in inverted_index for idx in inverted_index[w]]
         if sec_anchors:
             sec.start_idx = min(sec_anchors)
             sec.end_idx = max(sec_anchors)
         else:
-            sec.start_idx = 0
+            sec.start_idx = sec.heading_anchor_idx if sec.heading_anchor_idx is not None else 0
             sec.end_idx = max(0, total_transcript_words - 1)
 
-        # Traceability Log for Section Alignment
+        # Enforce section heading hard anchor bound
+        if sec.heading_anchor_idx is not None:
+            sec.start_idx = max(sec.start_idx, sec.heading_anchor_idx)
+
         if debug_alignment:
+            anchor_str = f" Anchor: {sec.heading_anchor_idx}" if sec.heading_anchor_idx is not None else ""
             print(
-                f"\n[SECTION ALIGNMENT] Section: \"{sec.heading_text}\" | Region: [{sec.start_idx}-{sec.end_idx}]",
+                f"\n[SECTION ALIGNMENT] Section: \"{sec.heading_text}\" | Region: [{sec.start_idx}-{sec.end_idx}]{anchor_str}",
                 file=sys.stderr
             )
 
-        # Coarse Block Localization pass for traceability logging
+        # IMPROVEMENT 1: Block Alignment & Block Region Expansion (+/- 150 words)
         for b in sec.blocks:
             b_words = b.clean_text.split()
             b_anchors = [idx for w in set(b_words) if w in inverted_index for idx in inverted_index[w]]
@@ -565,22 +671,31 @@ def align_script(
                 b.start_idx = sec.start_idx
                 b.end_idx = sec.end_idx
 
+            if sec.heading_anchor_idx is not None:
+                b.start_idx = max(b.start_idx, sec.heading_anchor_idx)
+
+            # Block Region Expansion (+/- 150 words)
+            b.expanded_start_idx = max(0, b.start_idx - BLOCK_EXPANSION_MARGIN)
+            b.expanded_end_idx = min(total_transcript_words - 1, b.end_idx + BLOCK_EXPANSION_MARGIN)
+
             if debug_alignment:
                 print(
-                    f"[BLOCK ALIGNMENT]   Block {b.block_id}: \"{b.raw_text[:40]}...\" | Region: [{b.start_idx}-{b.end_idx}]",
+                    f"[BLOCK ALIGNMENT]   Block {b.block_id}: \"{b.raw_text[:35]}...\" | Region: [{b.start_idx}-{b.end_idx}] | Expanded: [{b.expanded_start_idx}-{b.expanded_end_idx}]",
                     file=sys.stderr
                 )
 
-    # Independent sentence-level alignment tracking across transcript
+    # Collect all sentences across sections for alignment loop
     all_sentences: List[ScriptSentence] = []
+    sentence_block_map: Dict[int, ScriptBlock] = {}
     for sec in sections:
         if sec.heading_sentence:
             all_sentences.append(sec.heading_sentence)
         for b in sec.blocks:
             for s in b.sentences:
                 all_sentences.append(s)
+                sentence_block_map[s.sentence_id] = b
 
-    alignment_results = []
+    alignment_results = [None] * len(all_sentences)
     last_matched_end_idx = 0
     prev_unmatched = False
     last_section_name = None
@@ -593,13 +708,17 @@ def align_script(
         RejectionReason.BLOCK_ALIGNMENT_FAILED.value: 0,
     }
 
-    iterator = tqdm(all_sentences, desc="Aligning script sentences", unit="sentence", file=sys.stderr) if tqdm else all_sentences
+    iterator = enumerate(all_sentences)
+    if tqdm:
+        iterator = tqdm(list(iterator), desc="Aligning script sentences", unit="sentence", file=sys.stderr)
 
-    for sentence in iterator:
+    for idx, sentence in iterator:
         section_changed = (sentence.section_name != last_section_name)
         last_section_name = sentence.section_name
 
-        # Adaptive search window size
+        parent_block = sentence_block_map.get(sentence.sentence_id)
+        block_max_idx = parent_block.expanded_end_idx if parent_block and parent_block.expanded_end_idx is not None else total_transcript_words - 1
+
         adaptive_window_size = compute_adaptive_search_window(
             prev_unmatched=prev_unmatched,
             block_conf_low=prev_unmatched,
@@ -607,28 +726,19 @@ def align_script(
         )
 
         min_search_idx = max(0, last_matched_end_idx - monotonic_overlap)
-        max_search_idx = min(total_transcript_words - 1, min_search_idx + adaptive_window_size)
+        max_search_idx = min(total_transcript_words - 1, max(block_max_idx, min_search_idx + adaptive_window_size))
 
-        # 3-Stage Fallback Regional Search
-        # Pass 1: Local Window
+        # PASS 1: Candidate Generation inside Expanded Block / Adaptive Window
         candidate_windows = generate_candidate_windows_bounded(
             sentence, transcript_words, word_frequency, inverted_index,
             min_search_idx=min_search_idx, max_search_idx=max_search_idx
         )
 
-        # Pass 2: Fallback to Expanded Block / Regional Window if Local Window returns empty
-        if not candidate_windows and total_transcript_words > 0:
-            exp_max_idx = min(total_transcript_words - 1, min_search_idx + MAX_SEARCH_WINDOW)
-            candidate_windows = generate_candidate_windows_bounded(
-                sentence, transcript_words, word_frequency, inverted_index,
-                min_search_idx=min_search_idx, max_search_idx=exp_max_idx
-            )
-
-        # Pass 3: Fallback to Full Unbounded Transcript Search if still empty
+        # Fallback to expanded transcript search if empty
         if not candidate_windows and total_transcript_words > 0:
             candidate_windows = generate_candidate_windows_bounded(
                 sentence, transcript_words, word_frequency, inverted_index,
-                min_search_idx=0, max_search_idx=total_transcript_words - 1
+                min_search_idx=min_search_idx, max_search_idx=total_transcript_words - 1
             )
 
         if not candidate_windows:
@@ -642,103 +752,146 @@ def align_script(
                     f"  Sentence: \"{sentence.raw_text}\"\n"
                     f"  Section: \"{sentence.section_name}\"\n"
                     f"  Block ID: {sentence.block_id}\n"
-                    f"  Search Range: [{min_search_idx}, {max_search_idx}]\n"
+                    f"  Search Region: [{min_search_idx}, {max_search_idx}]\n"
                     f"  Candidate Count: 0\n"
                     f"  Best Candidate Text: N/A\n"
-                    f"  Best Score: 0.0\n"
+                    f"  Best Score: 0.00\n"
                     f"  Rejection Reason: {rejection.value}",
                     file=sys.stderr
                 )
 
-            alignment_results.append({
+            alignment_results[idx] = {
                 "sentence": sentence.raw_text,
                 "matched": False,
                 "rejection_reason": rejection.value
-            })
+            }
             continue
 
-        evaluated_candidates = []
-        for s_idx, e_idx in candidate_windows:
-            cand_slice = transcript_words[s_idx : e_idx + 1]
-            sim, cov, penalty, rank_score = score_candidate_advanced(
-                sentence, cand_slice, max_pause_seconds, pause_weight
+        best_cand, conf, match_type, best_details = evaluate_candidate_windows(
+            sentence, candidate_windows, transcript_words,
+            max_pause_seconds, pause_weight, tie_threshold,
+            phonetic_threshold, phonetic_top_candidates
+        )
+
+        if best_cand and conf >= min_confidence:
+            s_idx, e_idx, _, _, _, _, cand_slice = best_cand
+            matched_text = " ".join([w.raw_word for w in cand_slice])
+            start_fmt = cand_slice[0].start_fmt
+            end_fmt = cand_slice[-1].end_fmt
+
+            prev_unmatched = False
+            last_matched_end_idx = max(last_matched_end_idx, e_idx)
+
+            if debug_alignment:
+                print(
+                    f"[SENTENCE ALIGNMENT] Sentence: \"{sentence.raw_text[:40]}\" | Region: [{s_idx}-{e_idx}] (Score: {conf:.1f}, Type: {match_type})",
+                    file=sys.stderr
+                )
+
+            alignment_results[idx] = {
+                "sentence": sentence.raw_text,
+                "start": start_fmt,
+                "end": end_fmt,
+                "confidence": round(conf, 2),
+                "confidence_level": calibrate_confidence_level(conf),
+                "matched": True,
+                "match_type": match_type,
+                "matched_text": matched_text,
+                "start_idx": s_idx,
+                "end_idx": e_idx
+            }
+            continue
+
+        # Sentence failed initial pass -> Mark BELOW_THRESHOLD rejection for diagnostic log
+        rejection = RejectionReason.BELOW_THRESHOLD
+        s_idx_b, _, _, _, _, _, cand_slice_b = best_details if best_details else best_cand
+        matched_text_b = " ".join([w.raw_word for w in cand_slice_b]) if cand_slice_b else "N/A"
+
+        if debug_alignment:
+            print(
+                f"\n[ALIGNMENT REJECTED]\n"
+                f"  Sentence: \"{sentence.raw_text}\"\n"
+                f"  Section: \"{sentence.section_name}\"\n"
+                f"  Block ID: {sentence.block_id}\n"
+                f"  Search Region: [{min_search_idx}, {max_search_idx}]\n"
+                f"  Candidate Count: {len(candidate_windows)}\n"
+                f"  Best Candidate Text: \"{matched_text_b}\"\n"
+                f"  Best Score: {conf:.2f}\n"
+                f"  Rejection Reason: {rejection.value}",
+                file=sys.stderr
             )
-            evaluated_candidates.append((s_idx, e_idx, sim, cov, penalty, rank_score, cand_slice))
 
-        evaluated_candidates.sort(key=lambda c: c[5], reverse=True)
-        best_candidate = evaluated_candidates[0]
-        best_ranking_score = best_candidate[5]
+        # IMPROVEMENT 3: NEIGHBOR-BASED RESCUE PASS
+        # Search region between prev_matched_end and next_matched_start +/- 20 words
+        prev_bound = max(0, last_matched_end_idx - NEIGHBOR_RESCUE_MARGIN)
 
-        # Retake Preference Selection
-        for cand in evaluated_candidates[1:10]:
-            s_idx, rank_score = cand[0], cand[5]
-            score_diff = rank_score - best_ranking_score
-            if score_diff > tie_threshold:
-                best_ranking_score = rank_score
-                best_candidate = cand
-            elif abs(score_diff) <= tie_threshold:
-                if s_idx > best_candidate[0]:
-                    best_ranking_score = rank_score
-                    best_candidate = cand
+        # Look ahead for next matched / coarsely anchored sentence
+        next_bound = total_transcript_words - 1
+        for future_sent in all_sentences[idx + 1 : idx + 10]:
+            f_block = sentence_block_map.get(future_sent.sentence_id)
+            if f_block and f_block.start_idx is not None and f_block.start_idx > last_matched_end_idx:
+                next_bound = min(total_transcript_words - 1, f_block.end_idx + NEIGHBOR_RESCUE_MARGIN)
+                break
 
-        s_idx, e_idx, sim, cov, penalty, rank_score, cand_slice = best_candidate
-        confidence = max(0.0, min(100.0, rank_score))
-        matched_text = " ".join([w.raw_word for w in cand_slice])
+        rescue_min = prev_bound
+        rescue_max = next_bound
 
-        # Evaluate Rejection Reason if score < min_confidence
-        if confidence < min_confidence:
-            rejection = RejectionReason.BELOW_THRESHOLD
-            if s_idx < (last_matched_end_idx - monotonic_overlap):
-                rejection = RejectionReason.MONOTONIC_REJECTED
+        rescue_windows = generate_candidate_windows_bounded(
+            sentence, transcript_words, word_frequency, inverted_index,
+            min_search_idx=rescue_min, max_search_idx=rescue_max
+        )
 
+        r_cand, r_conf, r_type, _ = evaluate_candidate_windows(
+            sentence, rescue_windows, transcript_words,
+            max_pause_seconds, pause_weight, tie_threshold,
+            phonetic_threshold, phonetic_top_candidates
+        )
+
+        if r_cand and r_conf >= min_confidence:
+            rs_idx, re_idx, _, _, _, _, r_slice = r_cand
+            r_matched_text = " ".join([w.raw_word for w in r_slice])
+            start_fmt = r_slice[0].start_fmt
+            end_fmt = r_slice[-1].end_fmt
+
+            prev_unmatched = False
+            last_matched_end_idx = max(last_matched_end_idx, re_idx)
+
+            if debug_alignment:
+                print(
+                    f"[RESCUE PASS SUCCESS] Sentence: \"{sentence.raw_text[:40]}\" | Rescued Region: [{rs_idx}-{re_idx}] (Score: {r_conf:.1f})",
+                    file=sys.stderr
+                )
+
+            alignment_results[idx] = {
+                "sentence": sentence.raw_text,
+                "start": start_fmt,
+                "end": end_fmt,
+                "confidence": round(r_conf, 2),
+                "confidence_level": calibrate_confidence_level(r_conf),
+                "matched": True,
+                "match_type": f"rescue_{r_type}",
+                "matched_text": r_matched_text,
+                "start_idx": rs_idx,
+                "end_idx": re_idx
+            }
+        else:
             failure_analytics[rejection.value] += 1
             prev_unmatched = True
 
             if debug_alignment:
                 print(
-                    f"\n[ALIGNMENT REJECTED]\n"
-                    f"  Sentence: \"{sentence.raw_text}\"\n"
-                    f"  Section: \"{sentence.section_name}\"\n"
-                    f"  Block ID: {sentence.block_id}\n"
-                    f"  Search Range: [{min_search_idx}, {max_search_idx}]\n"
-                    f"  Candidate Count: {len(evaluated_candidates)}\n"
-                    f"  Best Candidate Text: \"{matched_text}\"\n"
-                    f"  Best Score: {confidence:.2f}\n"
-                    f"  Rejection Reason: {rejection.value}",
+                    f"[RESCUE PASS FAILED]  Sentence: \"{sentence.raw_text[:40]}\" | Best Rescue Score: {r_conf:.2f} < {min_confidence:.1f}",
                     file=sys.stderr
                 )
 
-            alignment_results.append({
+            alignment_results[idx] = {
                 "sentence": sentence.raw_text,
                 "matched": False,
                 "rejection_reason": rejection.value
-            })
-        else:
-            prev_unmatched = False
-            last_matched_end_idx = max(last_matched_end_idx, e_idx)
-            start_fmt = cand_slice[0].start_fmt
-            end_fmt = cand_slice[-1].end_fmt
-
-            if debug_alignment:
-                print(
-                    f"[SENTENCE ALIGNMENT] Sentence: \"{sentence.raw_text[:40]}\" | Region: [{s_idx}-{e_idx}] (Score: {confidence:.1f})",
-                    file=sys.stderr
-                )
-
-            alignment_results.append({
-                "sentence": sentence.raw_text,
-                "start": start_fmt,
-                "end": end_fmt,
-                "confidence": round(confidence, 2),
-                "confidence_level": calibrate_confidence_level(confidence),
-                "matched": True,
-                "matched_text": matched_text,
-                "start_idx": s_idx,
-                "end_idx": e_idx
-            })
+            }
 
     # Alignment Failure Analytics Summary Output
-    matched_count = sum(1 for r in alignment_results if r.get("matched") is not False)
+    matched_count = sum(1 for r in alignment_results if r and r.get("matched") is not False)
     unmatched_count = len(alignment_results) - matched_count
 
     if debug_alignment:
@@ -757,7 +910,7 @@ def align_script(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with Adaptive Localization & Diagnostics")
+    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with Section Anchors & Neighbor Rescue Pass")
     parser.add_argument("script_file", help="Path to ground-truth script text file")
     parser.add_argument("media_or_json_file", help="Path to video/audio file or transcript JSON file")
     parser.add_argument("--min-confidence", type=float, default=70.0, help="Minimum normal confidence threshold (default: 70.0)")
