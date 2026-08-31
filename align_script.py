@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """
-align_script.py - Bumblebee Stage 2 Alignment Engine with Context-Aware Scoring
+align_script.py - Bumblebee Stage 2 Context-Aware Hierarchical Alignment Engine
 
 Aligns noisy word-level transcripts produced by transcript.py with a ground-truth script file.
 
+Alignment Hierarchy:
+  Section Alignment -> Block Alignment -> Sentence Alignment (with Context-Aware Token Matching) -> Neighbor Rescue Pass -> Confidence Calibration
+
 Features:
-  1. Context-Aware Scoring (evaluates CONTEXT_LEFT_WORDS=3 and CONTEXT_RIGHT_WORDS=3 surrounding context)
-  2. Multi-Metric Scoring Formula:
+  1. Section Heading Anchors (ScriptSection.anchor_transcript_idx, [SECTION ANCHOR] debug logs)
+  2. Aggressive Block Grouping (ScriptBlock merges subheadings + bullet items into single searchable blocks)
+  3. Expanded Block Search Regions (BLOCK_EXPANSION = 150 words)
+  4. Strict Monotonic Ordering (MONOTONIC_OVERLAP = 20 words)
+  5. Neighbor Rescue Pass (+/- 20 words local search between prev/next matched bounds)
+  6. Context-Aware Token Matching (CONTEXT_WINDOW = 3, multi-metric scoring formula):
      final_score = 0.30 * similarity + 0.25 * coverage + 0.25 * context + 0.10 * order_bonus + 0.10 * phonetic_bonus - pause_penalty
-  3. Phonetic Similarity Booster (Metaphone/Soundex score booster)
-  4. Order-Aware Match Bonus (LCS token preservation ratio)
-  5. Section Heading Hard Anchors (sec.anchor_transcript_idx)
-  6. Block Region Expansion (BLOCK_EXPANSION = 150 words)
-  7. Neighbor Rescue Pass (+/- 20 words local search between prev/next matched bounds)
-  8. Debug Instrumentation Logging ([CONTEXT SCORE], [CONTEXT BOOST], [BLOCK ALIGNMENT], [ALIGNMENT REJECTED], [RESCUE SUCCESS], [RESCUE FAILED])
+  7. Confidence Calibration (HIGH >= 90, MEDIUM >= 75, LOW < 75)
+  8. Debug Instrumentation Logging ([SECTION ANCHOR], [BLOCK ALIGNMENT], [ALIGNMENT REJECTED], [RESCUE SUCCESS], [RESCUE FAILED], [CONTEXT SCORE], [CONTEXT BOOST])
   9. Persistent Tee-Style Run Logger (alignment_run_YYYYMMDD_HHMMSS.txt)
- 10. Hard Monotonic Chronology Enforcement
- 11. Alignment Failure Analytics Summary
- 12. Calibrated Confidence Levels (HIGH, MEDIUM, LOW)
+ 10. Failure Analytics Summary
 """
 
 import os
@@ -59,9 +60,9 @@ DEBUG_ALIGNMENT = False
 BASE_SEARCH_WINDOW = 150
 MAX_SEARCH_WINDOW = 600
 BLOCK_EXPANSION = 150
+MONOTONIC_OVERLAP = 20
 NEIGHBOR_RESCUE_MARGIN = 20
-CONTEXT_LEFT_WORDS = 3
-CONTEXT_RIGHT_WORDS = 3
+CONTEXT_WINDOW = 3
 
 
 # =========================================================================
@@ -321,9 +322,8 @@ def parse_script_hierarchical(
     script_content: str
 ) -> List[ScriptSection]:
     """
-    STAGES 1 & 2 (Structural Parsing & Merging):
-    Splits script into sentences, detects element types, merges short structural
-    elements (< 3 words), and constructs ScriptBlock and ScriptSection objects.
+    STAGES 1 & 2 (Structural Parsing & Block Grouping):
+    Groups subheadings, numbered items, and bullet points into unified ScriptBlock objects.
     """
     raw_lines = re.split(r'\n+', script_content)
     parsed_sentences: List[ScriptSentence] = []
@@ -466,15 +466,14 @@ def extract_context_words(
     transcript_words: List[TranscriptWord]
 ) -> Tuple[str, str, str, str]:
     """
-    Extracts up to CONTEXT_LEFT_WORDS (3) and CONTEXT_RIGHT_WORDS (3)
-    surrounding script and transcript candidate context strings.
+    Extracts up to CONTEXT_WINDOW (3) surrounding script and transcript candidate context strings.
     """
     s_idx, e_idx = candidate_slice_indices
     total_transcript = len(transcript_words)
 
     # 1. Transcript Context
-    cand_left_words = [w.clean_word for w in transcript_words[max(0, s_idx - CONTEXT_LEFT_WORDS) : s_idx] if w.clean_word]
-    cand_right_words = [w.clean_word for w in transcript_words[e_idx + 1 : min(total_transcript, e_idx + 1 + CONTEXT_RIGHT_WORDS)] if w.clean_word]
+    cand_left_words = [w.clean_word for w in transcript_words[max(0, s_idx - CONTEXT_WINDOW) : s_idx] if w.clean_word]
+    cand_right_words = [w.clean_word for w in transcript_words[e_idx + 1 : min(total_transcript, e_idx + 1 + CONTEXT_WINDOW)] if w.clean_word]
     cand_left_str = " ".join(cand_left_words)
     cand_right_str = " ".join(cand_right_words)
 
@@ -482,12 +481,12 @@ def extract_context_words(
     script_left_words = []
     if sent_idx > 0:
         prev_sent = all_sentences[sent_idx - 1]
-        script_left_words = prev_sent.words[-CONTEXT_LEFT_WORDS:]
+        script_left_words = prev_sent.words[-CONTEXT_WINDOW:]
 
     script_right_words = []
     if sent_idx < len(all_sentences) - 1:
         next_sent = all_sentences[sent_idx + 1]
-        script_right_words = next_sent.words[:CONTEXT_RIGHT_WORDS]
+        script_right_words = next_sent.words[:CONTEXT_WINDOW]
 
     script_left_str = " ".join(script_left_words)
     script_right_str = " ".join(script_right_words)
@@ -507,7 +506,7 @@ def score_candidate_context_aware(
     debug: bool = False
 ) -> Tuple[float, float, float, float, float, float]:
     """
-    CONTEXT-AWARE SCORING FORMULA:
+    IMPROVEMENT 6: CONTEXT-AWARE TOKEN MATCHING FORMULA
     final_score = 0.30 * similarity_score
                 + 0.25 * coverage_score
                 + 0.25 * context_score
@@ -668,7 +667,7 @@ def compute_adaptive_search_window(
 
 
 def calibrate_confidence_level(confidence: float) -> str:
-    """STAGE 5: Confidence Calibration Level."""
+    """Confidence Calibration Level."""
     if confidence >= 90.0:
         return "HIGH"
     elif confidence >= 75.0:
@@ -689,7 +688,7 @@ def evaluate_candidate_windows_context_aware(
     debug: bool = False
 ) -> Tuple[Optional[Tuple], float]:
     """
-    Evaluates candidate windows using Context-Aware Scoring formula & retake policy.
+    Evaluates candidate windows using Context-Aware Scoring formula.
     Returns: (best_candidate_tuple, final_confidence_score)
     """
     if not candidate_windows:
@@ -730,13 +729,13 @@ def align_script(
     pause_weight: float = 5.0,
     tie_threshold: float = 2.0,
     min_confidence: float = 70.0,
-    monotonic_overlap: int = 20,
+    monotonic_overlap: int = MONOTONIC_OVERLAP,
     block_expansion: int = BLOCK_EXPANSION,
     debug_alignment: bool = DEBUG_ALIGNMENT
 ) -> List[dict]:
     """
-    Main Hierarchical Alignment Function with Context-Aware Alignment Scoring,
-    Section Heading Hard Anchors, Block Region Expansion, and Diagnostics.
+    Main Context-Aware Hierarchical Alignment Function:
+    Section Alignment -> Block Alignment -> Sentence Alignment (Context-Aware Token Matching) -> Neighbor Rescue Pass -> Confidence Calibration
     """
     script_text = script_path
     if isinstance(script_path, str) and os.path.exists(script_path):
@@ -750,7 +749,10 @@ def align_script(
     # Stage 2: Parse Script into Sections -> Blocks -> Sentences
     sections = parse_script_hierarchical(script_text)
 
-    # SECTION HEADING HARD ANCHORS & BLOCK REGION EXPANSION
+    # =========================================================================
+    # IMPROVEMENT 1: SECTION ANCHORS
+    # Align section headings first; store heading match index in sec.anchor_transcript_idx
+    # =========================================================================
     for sec in sections:
         sec_words = []
         if sec.heading_sentence:
@@ -774,13 +776,15 @@ def align_script(
             sec.start_idx = max(sec.start_idx, max(0, sec.anchor_transcript_idx - 50))
             if debug_alignment:
                 print(
-                    f"\n[SECTION ALIGNMENT]\n"
+                    f"\n[SECTION ANCHOR]\n"
                     f"Heading: \"{sec.heading_text}\"\n"
                     f"Transcript Index: {sec.anchor_transcript_idx}",
                     file=sys.stderr
                 )
 
-        # BLOCK REGION EXPANSION (+/- BLOCK_EXPANSION = 150 words)
+        # =========================================================================
+        # IMPROVEMENT 2 & 3: BLOCK GROUPING & EXPANDED BLOCK SEARCH REGIONS
+        # =========================================================================
         for b in sec.blocks:
             b_words = b.clean_text.split()
             b_anchors = [idx for w in set(b_words) if w in inverted_index for idx in inverted_index[w]]
@@ -800,9 +804,9 @@ def align_script(
             if debug_alignment:
                 print(
                     f"\n[BLOCK ALIGNMENT]\n"
-                    f"Block ID: {b.block_id}\n"
+                    f"Block {b.block_id}\n"
                     f"Region: [{b.start_idx}-{b.end_idx}]\n"
-                    f"Expanded Region: [{b.expanded_start_idx}-{b.expanded_end_idx}]",
+                    f"Expanded: [{b.expanded_start_idx}-{b.expanded_end_idx}]",
                     file=sys.stderr
                 )
 
@@ -847,6 +851,9 @@ def align_script(
             section_changed=section_changed
         )
 
+        # =========================================================================
+        # IMPROVEMENT 4: STRICT MONOTONIC ORDERING (MONOTONIC_OVERLAP = 20)
+        # =========================================================================
         min_search_idx = max(0, last_matched_end_idx - monotonic_overlap)
         max_search_idx = min(total_transcript_words - 1, max(block_max_idx, min_search_idx + adaptive_window_size))
 
@@ -856,7 +863,7 @@ def align_script(
             min_search_idx=min_search_idx, max_search_idx=max_search_idx
         )
 
-        # Enforce hard monotonic ordering
+        # Enforce strict monotonic ordering
         valid_monotonic_windows = [cw for cw in candidate_windows if cw[1] >= min_search_idx]
 
         if not valid_monotonic_windows and candidate_windows:
@@ -868,11 +875,8 @@ def align_script(
                 print(
                     f"\n[ALIGNMENT REJECTED]\n"
                     f"Sentence: \"{sentence.raw_text}\"\n"
-                    f"Section: \"{sentence.section_name}\"\n"
-                    f"Block ID: {sentence.block_id}\n"
-                    f"Search Region: [{min_search_idx}-{max_search_idx}]\n"
-                    f"Candidate Count: {len(candidate_windows)}\n"
-                    f"Best Score: 0.0",
+                    f"Best Score: 0.0\n"
+                    f"Candidates: {len(candidate_windows)}",
                     file=sys.stderr
                 )
 
@@ -894,11 +898,8 @@ def align_script(
                 print(
                     f"\n[ALIGNMENT REJECTED]\n"
                     f"Sentence: \"{sentence.raw_text}\"\n"
-                    f"Section: \"{sentence.section_name}\"\n"
-                    f"Block ID: {sentence.block_id}\n"
-                    f"Search Region: [{min_search_idx}-{max_search_idx}]\n"
-                    f"Candidate Count: 0\n"
-                    f"Best Score: 0.0",
+                    f"Best Score: 0.0\n"
+                    f"Candidates: 0",
                     file=sys.stderr
                 )
 
@@ -909,6 +910,9 @@ def align_script(
             }
             continue
 
+        # =========================================================================
+        # IMPROVEMENT 6: CONTEXT-AWARE TOKEN MATCHING & CONFIDENCE CALIBRATION
+        # =========================================================================
         best_cand, conf = evaluate_candidate_windows_context_aware(
             sentence, idx, all_sentences, candidate_windows, transcript_words,
             max_pause_seconds, pause_weight, tie_threshold, debug=debug_alignment
@@ -938,34 +942,31 @@ def align_script(
 
         # Sentence failed initial pass -> Emit [ALIGNMENT REJECTED] log
         rejection = RejectionReason.BELOW_THRESHOLD
-        s_idx_b, _, _, _, _, _, cand_slice_b = best_cand
-        matched_text_b = " ".join([w.raw_word for w in cand_slice_b]) if cand_slice_b else "N/A"
 
         if debug_alignment:
             print(
                 f"\n[ALIGNMENT REJECTED]\n"
                 f"Sentence: \"{sentence.raw_text}\"\n"
-                f"Section: \"{sentence.section_name}\"\n"
-                f"Block ID: {sentence.block_id}\n"
-                f"Search Region: [{min_search_idx}-{max_search_idx}]\n"
-                f"Candidate Count: {len(candidate_windows)}\n"
-                f"Best Score: {conf:.1f}",
+                f"Best Score: {conf:.1f}\n"
+                f"Candidates: {len(candidate_windows)}",
                 file=sys.stderr
             )
 
-        # NEIGHBOR RESCUE PASS (+/- 20 words)
-        rescue_start = max(0, last_matched_end_idx - NEIGHBOR_RESCUE_MARGIN)
-        rescue_end = total_transcript_words - 1
+        # =========================================================================
+        # IMPROVEMENT 5: NEIGHBOR RESCUE PASS
+        # =========================================================================
+        rescue_min = max(0, last_matched_end_idx - NEIGHBOR_RESCUE_MARGIN)
+        rescue_max = total_transcript_words - 1
 
         for future_sent in all_sentences[idx + 1 : idx + 10]:
             f_block = sentence_block_map.get(future_sent.sentence_id)
             if f_block and f_block.start_idx is not None and f_block.start_idx > last_matched_end_idx:
-                rescue_end = min(total_transcript_words - 1, f_block.end_idx + NEIGHBOR_RESCUE_MARGIN)
+                rescue_max = min(total_transcript_words - 1, f_block.end_idx + NEIGHBOR_RESCUE_MARGIN)
                 break
 
         rescue_windows = generate_candidate_windows_bounded(
             sentence, transcript_words, word_frequency, inverted_index,
-            min_search_idx=rescue_start, max_search_idx=rescue_end
+            min_search_idx=rescue_min, max_search_idx=rescue_max
         )
 
         r_cand, r_conf = evaluate_candidate_windows_context_aware(
@@ -986,8 +987,8 @@ def align_script(
                 print(
                     f"\n[RESCUE SUCCESS]\n"
                     f"Sentence: \"{sentence.raw_text}\"\n"
-                    f"Region: [{rs_idx}-{re_idx}]\n"
-                    f"Score: {r_conf:.1f}",
+                    f"Score: {r_conf:.1f}\n"
+                    f"Region: [{rs_idx}-{re_idx}]",
                     file=sys.stderr
                 )
 
@@ -1040,7 +1041,7 @@ def align_script(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Alignment Engine with Context-Aware Scoring")
+    parser = argparse.ArgumentParser(description="Bumblebee Stage 2 Context-Aware Hierarchical Alignment Engine")
     parser.add_argument("script_file", help="Path to ground-truth script text file")
     parser.add_argument("media_or_json_file", help="Path to video/audio file or transcript JSON file")
     parser.add_argument("--min-confidence", type=float, default=70.0, help="Minimum normal confidence threshold (default: 70.0)")
