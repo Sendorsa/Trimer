@@ -1,0 +1,951 @@
+============================================================
+BUMBLEBEE ALIGNMENT RUN LOG
+Start Time: 2026-09-01 10:14:09
+Log File:   alignment_run_20260901_101409.txt
+============================================================
+
+[1/2] Loading Whisper model ('base')...
+[2/2] Transcribing '/Users/athish/Downloads/mandy.mp4'...
+Detected language: English
+  0%|          | 0/141798 [00:00<?, ?frames/s]  2%|1         | 2620/141798 [00:00<00:49, 2795.23frames/s]  4%|3         | 5016/141798 [00:01<00:32, 4233.74frames/s]  5%|5         | 7400/141798 [00:01<00:25, 5269.77frames/s]  6%|6         | 9116/141798 [00:01<00:24, 5394.19frames/s]  8%|7         | 10960/141798 [00:02<00:21, 6033.75frames/s] 10%|9         | 13762/141798 [00:02<00:19, 6477.44frames/s] 11%|#1        | 15656/141798 [00:02<00:20, 6055.72frames/s] 13%|#2        | 18228/141798 [00:03<00:19, 6297.62frames/s] 15%|#4        | 20804/141798 [00:03<00:18, 6443.98frames/s] 16%|#5        | 22588/141798 [00:03<00:18, 6532.67frames/s] 16%|#6        | 23388/141798 [00:04<00:31, 3732.41frames/s] 18%|#8        | 25688/141798 [00:04<00:25, 4575.09frames/s] 20%|#9        | 28068/141798 [00:05<00:23, 4924.60frames/s] 21%|##        | 29486/141798 [00:05<00:22, 4985.81frames/s] 22%|##2       | 31558/141798 [00:06<00:20, 5299.75frames/s] 24%|##3       | 33712/141798 [00:06<00:18, 5804.06frames/s] 25%|##5       | 35824/141798 [00:06<00:17, 5913.60frames/s] 26%|##6       | 37514/141798 [00:06<00:16, 6137.32frames/s] 28%|##7       | 39014/141798 [00:07<00:16, 6122.63frames/s] 29%|##8       | 40608/141798 [00:07<00:15, 6437.86frames/s] 29%|##9       | 41692/141798 [00:07<00:15, 6440.71frames/s] 31%|###       | 43252/141798 [00:07<00:14, 6659.72frames/s] 32%|###1      | 45322/141798 [00:08<00:14, 6720.13frames/s] 34%|###3      | 47594/141798 [00:08<00:12, 7783.28frames/s] 35%|###5      | 49664/141798 [00:08<00:12, 7535.12frames/s] 36%|###5      | 50916/141798 [00:08<00:12, 7306.48frames/s] 38%|###7      | 53640/141798 [00:09<00:21, 4068.27frames/s] 39%|###9      | 55440/141798 [00:10<00:18, 4668.68frames/s] 41%|####1     | 58400/141798 [00:10<00:12, 6603.32frames/s] 43%|####3     | 61398/141798 [00:10<00:09, 8405.48frames/s] 45%|####4     | 63164/141798 [00:10<00:08, 8870.26frames/s] 47%|####6     | 66160/141798 [00:10<00:07, 10563.27frames/s] 48%|####8     | 68382/141798 [00:11<00:07, 9358.21frames/s]  50%|####9     | 70246/141798 [00:11<00:08, 8189.95frames/s] 51%|#####1    | 72850/141798 [00:11<00:07, 8873.49frames/s] 52%|#####2    | 73894/141798 [00:11<00:08, 7599.29frames/s] 54%|#####3    | 76510/141798 [00:12<00:08, 7944.52frames/s] 56%|#####5    | 78698/141798 [00:12<00:09, 6876.10frames/s] 57%|#####6    | 80804/141798 [00:12<00:08, 6998.35frames/s] 58%|#####8    | 82530/141798 [00:13<00:08, 6799.36frames/s] 60%|######    | 85262/141798 [00:13<00:07, 7633.65frames/s] 61%|######1   | 87018/141798 [00:13<00:07, 6848.93frames/s] 63%|######3   | 89334/141798 [00:14<00:07, 6976.41frames/s] 64%|######4   | 91382/141798 [00:14<00:07, 6525.68frames/s] 66%|######6   | 93956/141798 [00:14<00:06, 6871.66frames/s] 68%|######8   | 96678/141798 [00:15<00:06, 6555.71frames/s] 70%|######9   | 98912/141798 [00:15<00:06, 6327.86frames/s] 71%|#######   | 100616/141798 [00:15<00:06, 6141.51frames/s] 73%|#######3  | 103616/141798 [00:16<00:05, 6979.54frames/s] 75%|#######4  | 105950/141798 [00:16<00:04, 7480.22frames/s] 77%|#######6  | 108702/141798 [00:16<00:04, 7433.93frames/s] 78%|#######7  | 110026/141798 [00:17<00:04, 6628.75frames/s] 79%|#######9  | 112664/141798 [00:17<00:04, 7149.84frames/s] 81%|########1 | 115048/141798 [00:17<00:03, 7301.59frames/s] 83%|########2 | 117362/141798 [00:18<00:03, 7653.27frames/s] 85%|########4 | 120360/141798 [00:18<00:02, 7912.50frames/s] 87%|########6 | 122904/141798 [00:18<00:02, 8068.94frames/s] 89%|########8 | 125902/141798 [00:18<00:01, 9322.07frames/s] 90%|######### | 128122/141798 [00:19<00:02, 6331.94frames/s] 92%|#########1| 129858/141798 [00:19<00:01, 6414.65frames/s] 93%|#########3| 132430/141798 [00:20<00:01, 6576.43frames/s] 96%|#########5| 135430/141798 [00:20<00:00, 6907.41frames/s] 96%|#########6| 136424/141798 [00:20<00:00, 6327.41frames/s] 98%|#########7| 138798/141798 [00:21<00:00, 7398.46frames/s] 98%|#########7| 138798/141798 [00:21<00:00, 6571.72frames/s]
+Extracting word timestamps:   0%|          | 0/243 [00:00<?, ?segment/s]Extracting word timestamps: 100%|##########| 243/243 [00:00<00:00, 95227.12segment/s]
+Aligning script sentences:   0%|          | 0/98 [00:00<?, ?sentence/s]Aligning script sentences:   3%|3         | 3/98 [00:00<00:05, 15.87sentence/s]Aligning script sentences:   5%|5         | 5/98 [00:00<00:05, 17.08sentence/s]Aligning script sentences:   7%|7         | 7/98 [00:00<00:12,  7.08sentence/s]Aligning script sentences:   9%|9         | 9/98 [00:00<00:09,  9.03sentence/s]Aligning script sentences:  11%|#1        | 11/98 [00:01<00:10,  8.31sentence/s]Aligning script sentences:  13%|#3        | 13/98 [00:01<00:08, 10.30sentence/s]Aligning script sentences:  15%|#5        | 15/98 [00:01<00:07, 10.69sentence/s]Aligning script sentences:  17%|#7        | 17/98 [00:01<00:07, 10.86sentence/s]Aligning script sentences:  19%|#9        | 19/98 [00:01<00:07, 11.08sentence/s]Aligning script sentences:  21%|##1       | 21/98 [00:02<00:06, 11.11sentence/s]Aligning script sentences:  23%|##3       | 23/98 [00:02<00:06, 11.80sentence/s]Aligning script sentences:  26%|##5       | 25/98 [00:02<00:10,  6.83sentence/s]Aligning script sentences:  29%|##8       | 28/98 [00:02<00:07,  9.71sentence/s]Aligning script sentences:  35%|###4      | 34/98 [00:02<00:03, 16.11sentence/s]Aligning script sentences:  38%|###7      | 37/98 [00:03<00:03, 17.97sentence/s]Aligning script sentences:  42%|####1     | 41/98 [00:03<00:02, 21.18sentence/s]Aligning script sentences:  45%|####4     | 44/98 [00:03<00:03, 17.39sentence/s]Aligning script sentences:  48%|####7     | 47/98 [00:03<00:03, 13.50sentence/s]Aligning script sentences:  52%|#####2    | 51/98 [00:03<00:02, 17.51sentence/s]Aligning script sentences:  56%|#####6    | 55/98 [00:04<00:02, 19.70sentence/s]Aligning script sentences:  59%|#####9    | 58/98 [00:04<00:02, 18.01sentence/s]Aligning script sentences:  62%|######2   | 61/98 [00:04<00:02, 17.50sentence/s]Aligning script sentences:  78%|#######7  | 76/98 [00:04<00:00, 40.83sentence/s]Aligning script sentences:  84%|########3 | 82/98 [00:04<00:00, 37.00sentence/s]Aligning script sentences:  98%|#########7| 96/98 [00:04<00:00, 55.37sentence/s]Aligning script sentences: 100%|##########| 98/98 [00:05<00:00, 19.35sentence/s]
+[
+  {
+    "sentence": "Good morning everyone.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Today, I will be explaining two important concepts in genetics: Gene Mapping and Gene Sequencing.",
+    "start": "00:00:30.380",
+    "end": "00:00:35.400",
+    "confidence": 86.74,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Today I'll be explaining to important concepts in genetics, gene mapping and gene sequencing.",
+    "start_idx": 28,
+    "end_idx": 41
+  },
+  {
+    "sentence": "These techniques have revolutionized our understanding of heredity, genetic disorders, evolution, and modern biotechnology.",
+    "start": "00:01:15.880",
+    "end": "00:01:22.960",
+    "confidence": 82.41,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "These techniques have changed our understanding of heredity, genetic disorders, evolution and modern biotechnology.",
+    "start_idx": 81,
+    "end_idx": 94
+  },
+  {
+    "sentence": "Let us begin with gene mapping.",
+    "start": "00:02:05.660",
+    "end": "00:02:08.740",
+    "confidence": 90.97,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Let us begin with gene mapping.",
+    "start_idx": 121,
+    "end_idx": 126
+  },
+  {
+    "sentence": "What is Gene Mapping?",
+    "start": "00:02:09.140",
+    "end": "00:02:09.980",
+    "confidence": 100.0,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "What is gene mapping?",
+    "start_idx": 127,
+    "end_idx": 130
+  },
+  {
+    "sentence": "Gene mapping is the process of determining the location of genes on chromosomes and estimating the distance between them.",
+    "start": "00:02:51.480",
+    "end": "00:02:59.220",
+    "confidence": 99.12,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Okay. Probe. Gene mapping is the process of determining the location of genes on chromosomes and estimating the distance between them.",
+    "start_idx": 201,
+    "end_idx": 221
+  },
+  {
+    "sentence": "In simple words, it acts like a roadmap that tells us where specific genes are situated within the genome.",
+    "start": "00:03:04.840",
+    "end": "00:03:12.040",
+    "confidence": 88.31,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "In simple words, it acts like a load map that tells us where specific genes are situated within the genome.",
+    "start_idx": 229,
+    "end_idx": 248
+  },
+  {
+    "sentence": "Imagine a chromosome as a long highway and genes as landmarks along that highway.",
+    "start": "00:03:12.880",
+    "end": "00:03:20.560",
+    "confidence": 89.39,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Imagine a chromosome as long as highway and gene as landmarks along with the highway.",
+    "start_idx": 249,
+    "end_idx": 263
+  },
+  {
+    "sentence": "Gene mapping helps us identify the position of each landmark and understand how they are related to one another.",
+    "start": "00:03:21.540",
+    "end": "00:03:30.580",
+    "confidence": 94.57,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Gene mapping helps us identify the position of each landmark and understand how they are related to one another. Okay. We know.",
+    "start_idx": 264,
+    "end_idx": 285
+  },
+  {
+    "sentence": "Gene mapping is important because it helps scientists identify genes associated with inherited diseases, understand genetic variation, and improve crop and animal breeding programs.",
+    "start": "00:04:00.280",
+    "end": "00:04:16.880",
+    "confidence": 82.61,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "mapping is important because it helps scientists identify gene associated with inherited diseases and understand genetic variation and improve crop and animal breeding programs. Okay. Now comes...",
+    "start_idx": 325,
+    "end_idx": 351
+  },
+  {
+    "sentence": "Types of Gene Mapping",
+    "start": "00:04:21.100",
+    "end": "00:04:22.240",
+    "confidence": 82.61,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "types of gene mapping.",
+    "start_idx": 360,
+    "end_idx": 363
+  },
+  {
+    "sentence": "There are two main types of gene mapping:",
+    "start": "00:04:20.200",
+    "end": "00:04:22.720",
+    "confidence": 88.85,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "There are many two types of gene mapping. First",
+    "start_idx": 356,
+    "end_idx": 364
+  },
+  {
+    "sentence": "1. Genetic Mapping (Linkage Mapping)",
+    "start": "00:04:22.720",
+    "end": "00:04:25.200",
+    "confidence": 87.24,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "is genetic mapping, linkage mapping.",
+    "start_idx": 365,
+    "end_idx": 369
+  },
+  {
+    "sentence": "Genetic mapping is based on the principle of genetic linkage.",
+    "start": "00:04:25.760",
+    "end": "00:04:29.100",
+    "confidence": 100.0,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Genetic mapping is based on the principle of genetic linkage",
+    "start_idx": 370,
+    "end_idx": 379
+  },
+  {
+    "sentence": "Genes that are located close together on the same chromosome tend to be inherited together.",
+    "start": "00:04:49.300",
+    "end": "00:04:54.860",
+    "confidence": 89.58,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "genes that are located close together on the same chromosome tend to be inherited together.",
+    "start_idx": 416,
+    "end_idx": 430
+  },
+  {
+    "sentence": "During meiosis, homologous chromosomes exchange genetic material through a process called crossing over.",
+    "start": "00:05:40.320",
+    "end": "00:05:47.020",
+    "confidence": 88.34,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "During meiosis, homologous chromosomes exchange genetic materials through a process called... Crossing over.",
+    "start_idx": 474,
+    "end_idx": 486
+  },
+  {
+    "sentence": "The frequency of recombination between two genes is used to estimate the distance between them.",
+    "start": "00:05:47.560",
+    "end": "00:05:53.660",
+    "confidence": 97.92,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "The frequency of recombination between two genes is used to estimate the distance between them.",
+    "start_idx": 487,
+    "end_idx": 501
+  },
+  {
+    "sentence": "The unit used is called a centimorgan, abbreviated as cM.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "One centimorgan represents a 1% chance that a crossover event will occur between two genes during meiosis.",
+    "start": "00:06:10.720",
+    "end": "00:06:15.140",
+    "confidence": 70.36,
+    "confidence_level": "LOW",
+    "matched": true,
+    "matched_text": "chance that across over event will occur between two genes during meiosis.",
+    "start_idx": 516,
+    "end_idx": 527
+  },
+  {
+    "sentence": "For example, if two genes show a recombination frequency of 10%, they are said to be 10 centimorgans apart.",
+    "start": "00:07:25.880",
+    "end": "00:07:33.020",
+    "confidence": 78.52,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "example, if two genes show a recombination frequency of 10 percent, they are said to be 10centre more than a",
+    "start_idx": 575,
+    "end_idx": 594
+  },
+  {
+    "sentence": "2. Physical Mapping",
+    "start": "00:07:48.880",
+    "end": "00:07:50.600",
+    "confidence": 72.78,
+    "confidence_level": "LOW",
+    "matched": true,
+    "matched_text": "Physical mapping",
+    "start_idx": 596,
+    "end_idx": 597
+  },
+  {
+    "sentence": "Physical mapping determines the actual physical distance between genes on a chromosome.",
+    "start": "00:08:03.320",
+    "end": "00:08:08.420",
+    "confidence": 87.89,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "determines the actual physical distance between two genes on a chromosome.",
+    "start_idx": 611,
+    "end_idx": 621
+  },
+  {
+    "sentence": "Unlike genetic mapping, which relies on recombination frequencies, physical mapping measures the number of DNA base pairs separating genes.",
+    "start": "00:08:09.000",
+    "end": "00:08:18.480",
+    "confidence": 83.9,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Unlike genetic mapping, which relies on recombination frequency, physical mapping measures the number of DNA -based, specific, separating genes.",
+    "start_idx": 622,
+    "end_idx": 640
+  },
+  {
+    "sentence": "Techniques such as restriction mapping, fluorescence in situ hybridization (FISH), and genome sequencing are commonly used for physical mapping.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Physical maps provide a more accurate representation of chromosome structure.",
+    "start": "00:11:10.320",
+    "end": "00:11:19.380",
+    "confidence": 91.41,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Physical maps provide a more accurate representation of chromosome structure. Now we are going to talk about",
+    "start_idx": 699,
+    "end_idx": 715
+  },
+  {
+    "sentence": "Applications of Gene Mapping",
+    "start": "00:11:19.380",
+    "end": "00:11:20.720",
+    "confidence": 80.08,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "application of gene mapping.",
+    "start_idx": 716,
+    "end_idx": 719
+  },
+  {
+    "sentence": "Gene mapping has several important applications:",
+    "start": "00:11:21.460",
+    "end": "00:11:26.020",
+    "confidence": 88.35,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Gene mapping have several important applications. First application being",
+    "start_idx": 720,
+    "end_idx": 728
+  },
+  {
+    "sentence": "- Identification of genes responsible for genetic diseases such as cystic fibrosis and Huntington's disease.",
+    "start": "00:11:26.020",
+    "end": "00:11:30.480",
+    "confidence": 75.73,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "identification of gene responsible for genetic diseases such as cystic growths.",
+    "start_idx": 729,
+    "end_idx": 739
+  },
+  {
+    "sentence": "- Development of personalized medicine.",
+    "start": "00:12:04.880",
+    "end": "00:12:08.500",
+    "confidence": 81.75,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "development of personalized medicines.",
+    "start_idx": 770,
+    "end_idx": 773
+  },
+  {
+    "sentence": "- Understanding evolutionary relationships among organisms.",
+    "start": "00:12:08.500",
+    "end": "00:12:11.580",
+    "confidence": 92.26,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Understanding evolutionary relationship among organisms.",
+    "start_idx": 774,
+    "end_idx": 778
+  },
+  {
+    "sentence": "- Improvement of agricultural crops through marker-assisted breeding.",
+    "start": "00:12:12.260",
+    "end": "00:12:14.460",
+    "confidence": 76.89,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Improvement of agricultural crops.",
+    "start_idx": 779,
+    "end_idx": 782
+  },
+  {
+    "sentence": "- Genome research and comparative genomics.",
+    "start": "00:12:31.960",
+    "end": "00:12:34.400",
+    "confidence": 91.27,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Genome research and comparative genomics.",
+    "start_idx": 790,
+    "end_idx": 794
+  },
+  {
+    "sentence": "Now that we understand gene mapping, let us move on to gene sequencing.",
+    "start": "00:12:40.860",
+    "end": "00:12:45.100",
+    "confidence": 100.0,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Now that we understand gene mapping, let us move on to gene sequencing.",
+    "start_idx": 795,
+    "end_idx": 807
+  },
+  {
+    "sentence": "What is Gene Sequencing?",
+    "start": "00:12:45.100",
+    "end": "00:12:46.920",
+    "confidence": 100.0,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "What is gene sequencing?",
+    "start_idx": 808,
+    "end_idx": 811
+  },
+  {
+    "sentence": "Gene sequencing is the process of determining the exact order of nucleotides in a DNA molecule.",
+    "start": "00:12:47.360",
+    "end": "00:12:53.020",
+    "confidence": 88.09,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Gene sequencing is a process of determining the exact order of nucleotides in a DNA molecule.",
+    "start_idx": 812,
+    "end_idx": 827
+  },
+  {
+    "sentence": "DNA is composed of four nitrogenous bases:",
+    "start": "00:13:00.180",
+    "end": "00:13:02.840",
+    "confidence": 82.52,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "DNA is composed of four nitrogenous base.",
+    "start_idx": 830,
+    "end_idx": 836
+  },
+  {
+    "sentence": "- Adenine (A)",
+    "start": "00:13:03.460",
+    "end": "00:13:03.940",
+    "confidence": 73.9,
+    "confidence_level": "LOW",
+    "matched": true,
+    "matched_text": "Adenine.",
+    "start_idx": 837,
+    "end_idx": 837
+  },
+  {
+    "sentence": "- Thymine (T)",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "- Guanine (G)",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "- Cytosine (C)",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "The sequence of these bases contains the genetic information needed for growth, development, and functioning of living organisms.",
+    "start": "00:13:14.460",
+    "end": "00:13:21.300",
+    "confidence": 84.25,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "sequence of these base contained genetic information needed for growth, development and functioning of living organisms.",
+    "start_idx": 842,
+    "end_idx": 857
+  },
+  {
+    "sentence": "Gene sequencing allows scientists to read this genetic code and identify variations or mutations.",
+    "start": "00:13:22.320",
+    "end": "00:13:28.040",
+    "confidence": 91.6,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Gene sequencing allows scientists to read these genetic code and identify variation or mutation.",
+    "start_idx": 858,
+    "end_idx": 871
+  },
+  {
+    "sentence": "History of Gene Sequencing",
+    "start": "00:13:28.040",
+    "end": "00:13:30.290",
+    "confidence": 99.43,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "History of gene sequencing.",
+    "start_idx": 872,
+    "end_idx": 875
+  },
+  {
+    "sentence": "One of the most significant developments in molecular biology was the invention of the Sanger sequencing method by British scientist  in 1977.",
+    "start": "00:13:59.900",
+    "end": "00:14:12.620",
+    "confidence": 88.71,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "One of the most significant development in molecular biology was invention of sanghur sequencing by a British scientist in 1977.",
+    "start_idx": 899,
+    "end_idx": 918
+  },
+  {
+    "sentence": "This technique became the foundation of DNA sequencing for many years and played a major role in major genome projects.",
+    "start": "00:14:12.620",
+    "end": "00:14:21.080",
+    "confidence": 93.9,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "This technique became the foundation of DNA sequencing for many years and create a major role in major genome projectors.",
+    "start_idx": 919,
+    "end_idx": 938
+  },
+  {
+    "sentence": "Today, advanced technologies known as Next Generation Sequencing, or NGS, have made sequencing much faster and more affordable.",
+    "start": "00:14:21.520",
+    "end": "00:14:30.180",
+    "confidence": 91.85,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Today, advanced technology known as the next -gen -reson sequencing or NGS have made sequencing much faster and more affordable.",
+    "start_idx": 939,
+    "end_idx": 958
+  },
+  {
+    "sentence": "Steps in Gene Sequencing",
+    "start": "00:14:35.800",
+    "end": "00:14:38.220",
+    "confidence": 89.41,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Ceps in gene sequencing.",
+    "start_idx": 959,
+    "end_idx": 962
+  },
+  {
+    "sentence": "The general process of gene sequencing involves several steps:",
+    "start": "00:14:38.580",
+    "end": "00:14:42.420",
+    "confidence": 94.5,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "The general process of gene sequencing involves several steps,",
+    "start_idx": 963,
+    "end_idx": 971
+  },
+  {
+    "sentence": "Step 1: DNA Extraction",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "First, DNA is isolated from cells obtained from blood, saliva, tissue, or other biological samples.",
+    "start": "00:14:59.180",
+    "end": "00:15:04.880",
+    "confidence": 86.84,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "DNA is isolated from cell obtained from blood, saliva, tissue or any biological samples.",
+    "start_idx": 992,
+    "end_idx": 1005
+  },
+  {
+    "sentence": "Step 2: DNA Amplification",
+    "start": "00:15:05.940",
+    "end": "00:15:07.540",
+    "confidence": 86.2,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "2 DNA amplification.",
+    "start_idx": 1007,
+    "end_idx": 1009
+  },
+  {
+    "sentence": "Specific DNA regions are amplified using Polymerase Chain Reaction, commonly known as PCR.",
+    "start": "00:15:08.060",
+    "end": "00:15:12.200",
+    "confidence": 78.59,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Specific DNA regions are amplified using polymerase chain reaction,",
+    "start_idx": 1010,
+    "end_idx": 1018
+  },
+  {
+    "sentence": "PCR generates millions of copies of the target DNA sequence.",
+    "start": "00:15:29.300",
+    "end": "00:15:33.200",
+    "confidence": 84.27,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "PCR generates million of copies of the target DNA",
+    "start_idx": 1040,
+    "end_idx": 1048
+  },
+  {
+    "sentence": "Step 3: Sequencing Reaction",
+    "start": "00:15:43.660",
+    "end": "00:15:45.320",
+    "confidence": 80.2,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Step 3 sequencing eruption.",
+    "start_idx": 1063,
+    "end_idx": 1066
+  },
+  {
+    "sentence": "The DNA is subjected to sequencing reactions that determine the order of nucleotides.",
+    "start": "00:15:46.020",
+    "end": "00:15:50.140",
+    "confidence": 89.41,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "The DNA is subjected to sequencing the option that determines the order of nucleotides.",
+    "start_idx": 1067,
+    "end_idx": 1080
+  },
+  {
+    "sentence": "In Sanger sequencing, modified nucleotides called dideoxynucleotides terminate DNA synthesis at specific points, producing fragments of different lengths.",
+    "start": "00:16:25.700",
+    "end": "00:16:36.320",
+    "confidence": 79.11,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "In sanghur sequencing modified nucleotides are called... Deoxyneucleotides determine the DNA synthesis at the specific point, reducing fragments of different lengths.",
+    "start_idx": 1132,
+    "end_idx": 1152
+  },
+  {
+    "sentence": "Step 4: Data Analysis",
+    "start": "00:16:37.160",
+    "end": "00:16:38.520",
+    "confidence": 91.29,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "Step 4 data analysis.",
+    "start_idx": 1153,
+    "end_idx": 1156
+  },
+  {
+    "sentence": "The generated sequence data is analyzed using bioinformatics tools.",
+    "start": "00:16:53.480",
+    "end": "00:16:58.620",
+    "confidence": 82.66,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "The generated sequencing data is analyzed using bioinformatic tools.",
+    "start_idx": 1170,
+    "end_idx": 1178
+  },
+  {
+    "sentence": "Scientists compare the obtained sequence with reference genomes to identify mutations or genetic variations.",
+    "start": "00:17:57.600",
+    "end": "00:18:07.020",
+    "confidence": 81.31,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "compare the obtained sequence with reference to... Genomes to identify the mutation or genetic variation.",
+    "start_idx": 1244,
+    "end_idx": 1258
+  },
+  {
+    "sentence": "Types of Gene Sequencing",
+    "start": "00:18:07.020",
+    "end": "00:18:08.860",
+    "confidence": 86.17,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Type of gene sequencing,",
+    "start_idx": 1259,
+    "end_idx": 1262
+  },
+  {
+    "sentence": "1. Sanger Sequencing",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Sanger sequencing is highly accurate and suitable for sequencing small DNA fragments.",
+    "start": "00:18:16.580",
+    "end": "00:18:20.260",
+    "confidence": 86.24,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "is highly accurate and suitable for sequencing small DNA fragments.",
+    "start_idx": 1275,
+    "end_idx": 1284
+  },
+  {
+    "sentence": "Advantages: - High accuracy",
+    "start": "00:18:25.700",
+    "end": "00:18:27.820",
+    "confidence": 84.8,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Advantage is high accuracy",
+    "start_idx": 1285,
+    "end_idx": 1288
+  },
+  {
+    "sentence": "- Reliable results",
+    "start": "00:18:28.300",
+    "end": "00:18:29.260",
+    "confidence": 92.93,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "reliable results,",
+    "start_idx": 1290,
+    "end_idx": 1291
+  },
+  {
+    "sentence": "Limitations: - Time-consuming - Expensive for large genomes",
+    "start": "00:18:29.420",
+    "end": "00:18:32.640",
+    "confidence": 75.84,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "limitation time -consuming, expensive for large genomes.",
+    "start_idx": 1292,
+    "end_idx": 1298
+  },
+  {
+    "sentence": "2. Next Generation Sequencing (NGS)",
+    "start": "00:18:38.880",
+    "end": "00:18:41.400",
+    "confidence": 87.12,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "is next generation sequencing, NGS.",
+    "start_idx": 1300,
+    "end_idx": 1304
+  },
+  {
+    "sentence": "NGS can sequence millions of DNA fragments simultaneously.",
+    "start": "00:18:41.900",
+    "end": "00:18:46.640",
+    "confidence": 91.37,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "NGS can sequence million of DNA fragments simultaneously.",
+    "start_idx": 1305,
+    "end_idx": 1312
+  },
+  {
+    "sentence": "Advantages: - High throughput",
+    "start": "00:18:46.640",
+    "end": "00:18:49.660",
+    "confidence": 84.4,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Advantage is high throughput",
+    "start_idx": 1313,
+    "end_idx": 1316
+  },
+  {
+    "sentence": "- Faster processing",
+    "start": "00:18:49.660",
+    "end": "00:18:51.180",
+    "confidence": 97.16,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "faster processing,",
+    "start_idx": 1317,
+    "end_idx": 1318
+  },
+  {
+    "sentence": "- Lower cost per base",
+    "start": "00:18:51.420",
+    "end": "00:18:52.620",
+    "confidence": 93.68,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "lower cost per base.",
+    "start_idx": 1319,
+    "end_idx": 1322
+  },
+  {
+    "sentence": "Applications: - Whole genome sequencing",
+    "start": "00:18:56.020",
+    "end": "00:18:59.320",
+    "confidence": 84.65,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Application for whole genome sequencing,",
+    "start_idx": 1323,
+    "end_idx": 1327
+  },
+  {
+    "sentence": "- Cancer genomics",
+    "start": "00:18:59.540",
+    "end": "00:19:00.600",
+    "confidence": 78.98,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "cancer genomic,",
+    "start_idx": 1328,
+    "end_idx": 1329
+  },
+  {
+    "sentence": "- Pathogen detection",
+    "start": "00:19:01.200",
+    "end": "00:19:04.420",
+    "confidence": 96.25,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "pathogen detection,",
+    "start_idx": 1330,
+    "end_idx": 1331
+  },
+  {
+    "sentence": "- Genetic disease diagnosis",
+    "start": "00:19:05.000",
+    "end": "00:19:06.360",
+    "confidence": 97.41,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "genetic disease diagnosis,",
+    "start_idx": 1332,
+    "end_idx": 1334
+  },
+  {
+    "sentence": "Applications of Gene Sequencing",
+    "start": "00:19:07.100",
+    "end": "00:19:08.640",
+    "confidence": 90.35,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "application of gene sequencing,",
+    "start_idx": 1335,
+    "end_idx": 1338
+  },
+  {
+    "sentence": "Gene sequencing has transformed many fields of science and medicine.",
+    "start": "00:19:19.720",
+    "end": "00:19:23.280",
+    "confidence": 97.5,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "gene sequencing has transformed many fields of science and medicine,",
+    "start_idx": 1347,
+    "end_idx": 1356
+  },
+  {
+    "sentence": "Medical Applications",
+    "start": "00:19:23.940",
+    "end": "00:19:24.960",
+    "confidence": 81.53,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "medical application.",
+    "start_idx": 1357,
+    "end_idx": 1358
+  },
+  {
+    "sentence": "Sequencing helps identify disease-causing mutations and enables early diagnosis of genetic disorders.",
+    "start": "00:19:25.560",
+    "end": "00:19:40.760",
+    "confidence": 81.62,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "Sequencing helps identify disease causing mutation and enable... A disease causing mutation and enables early diagnosis of genetic disorder.",
+    "start_idx": 1359,
+    "end_idx": 1377
+  },
+  {
+    "sentence": "It is widely used in cancer research to understand tumor genetics and develop targeted therapies.",
+    "start": "00:19:41.080",
+    "end": "00:19:47.300",
+    "confidence": 96.74,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "It is widely used in cancer research to understand the tumor genetics and develop targeted therapies.",
+    "start_idx": 1378,
+    "end_idx": 1393
+  },
+  {
+    "sentence": "Personalized Medicine",
+    "start": "00:22:36.620",
+    "end": "00:22:37.450",
+    "confidence": 82.8,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "personalized medicine.",
+    "start_idx": 1594,
+    "end_idx": 1595
+  },
+  {
+    "sentence": "Doctors can design treatments based on an individual's genetic makeup, increasing treatment effectiveness and reducing side effects.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Agriculture Scientists use sequencing to develop crops with improved yield, disease resistance, and environmental adaptability.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Evolutionary Studies",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "DNA sequencing helps researchers trace evolutionary relationships and understand the origin of species.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Forensic Science",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Sequencing and DNA analysis are used for criminal investigations, paternity testing, and identification of individuals.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Relationship Between Gene Mapping and Gene Sequencing",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Although gene mapping and gene sequencing are different techniques, they are closely related.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Gene mapping tells us where a gene is located on a chromosome.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Gene sequencing tells us the exact nucleotide sequence of that gene.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "In other words, gene mapping provides the address, while gene sequencing reveals the complete content of the gene.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Together, these methods help scientists understand genome organization, identify disease-causing genes, and develop new diagnostic and therapeutic approaches.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Conclusion",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "To conclude, gene mapping and gene sequencing are fundamental tools in modern genetics.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "Gene mapping helps determine the location and arrangement of genes on chromosomes, while gene sequencing reveals the precise order of nucleotides within DNA.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  },
+  {
+    "sentence": "These technologies have greatly advanced our understanding of genetic diseases, evolution, agriculture, biotechnology, and personalized medicine.",
+    "start": "00:22:27.640",
+    "end": "00:22:37.450",
+    "confidence": 92.7,
+    "confidence_level": "HIGH",
+    "matched": true,
+    "matched_text": "DNA. These technologies have greatly advanced our understanding of genetic disease, evolutionary evolution, agriculture, biotechnology and personalized medicine.",
+    "start_idx": 1578,
+    "end_idx": 1595
+  },
+  {
+    "sentence": "As sequencing technologies continue to improve, they will play an even greater role in healthcare, research, and biological discoveries in the future.",
+    "start": "00:22:38.200",
+    "end": "00:22:47.460",
+    "confidence": 83.16,
+    "confidence_level": "MEDIUM",
+    "matched": true,
+    "matched_text": "As sequencing technology continues to improve, there will be an even greater role in health care research biological discoveries in future.",
+    "start_idx": 1596,
+    "end_idx": 1616
+  },
+  {
+    "sentence": "Thank you for your attention.",
+    "matched": false,
+    "rejection_reason": "BELOW_THRESHOLD"
+  }
+]
+
+[RUNTIME SUMMARY]
+Total Execution Time: 27.79 seconds
